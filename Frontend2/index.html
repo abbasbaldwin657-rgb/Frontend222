@@ -1,0 +1,1190 @@
+<!DOCTYPE html>
+<html lang="az">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>DashStack — Full Dashboard</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif; }
+  .ico { fill:none; stroke:currentColor; stroke-width:2; stroke-linecap:round; stroke-linejoin:round; }
+  .app { display:flex; min-height:100vh; background:#eef0f5; }
+  .sidebar { width:220px; flex-shrink:0; background:#fff; border-right:1px solid #e7eaf0; padding:18px 14px; position:sticky; top:0; height:100vh; overflow-y:auto; }
+  .logo { font-size:20px; font-weight:800; color:#17233b; padding:4px 10px 20px; }
+  .logo span { color:#3b82f6; }
+  .nav-item { display:block; width:100%; text-align:left; background:none; border:none; cursor:pointer; padding:10px 14px; margin-bottom:2px; border-radius:8px; font-size:13.5px; color:#40465a; font-family:inherit; }
+  .nav-item:hover { background:#f2f4f9; }
+  .nav-item.active { background:#4d7dfe; color:#fff; font-weight:600; box-shadow:0 6px 14px rgba(77,125,254,.35); }
+  .nav-sep { border-top:1px solid #edf0f5; margin:12px 4px; }
+  .nav-label { font-size:10.5px; font-weight:700; letter-spacing:.8px; text-transform:uppercase; color:#9aa3b5; padding:2px 14px 8px; }
+  .main { flex:1; min-width:0; display:flex; flex-direction:column; }
+  .topbar { display:flex; align-items:center; justify-content:space-between; gap:20px; background:#fafbfd; border-bottom:1px solid #e7eaf0; padding:12px 26px; }
+  .search { display:flex; align-items:center; gap:9px; width:min(340px,40vw); background:#eef1f6; border-radius:10px; padding:9px 14px; color:#8b94a7; }
+  .search input { border:none; outline:none; background:transparent; flex:1; font-size:13px; color:#333; font-family:inherit; }
+  .topbar-right { display:flex; align-items:center; gap:22px; }
+  .bell { position:relative; background:none; border:none; cursor:pointer; color:#3b82f6; }
+  .bell .badge { position:absolute; top:-6px; right:-7px; width:15px; height:15px; border-radius:50%; background:#f43f5e; color:#fff; font-size:9px; font-weight:700; display:grid; place-items:center; }
+  .user { display:flex; align-items:center; gap:10px; background:none; border:none; cursor:pointer; font-family:inherit; }
+  .avatar { width:38px; height:38px; border-radius:50%; background:linear-gradient(135deg,#fbd0e0,#e6b7d6); display:grid; place-items:center; font-size:19px; }
+  .user-meta { display:flex; flex-direction:column; align-items:flex-start; line-height:1.15; }
+  .user-meta b { font-size:13px; color:#17233b; }
+  .user-meta small { font-size:11px; color:#8b94a7; }
+  .muted { color:#8b94a7; }
+  .lang-wrap { position:relative; }
+  .lang { display:flex; align-items:center; gap:8px; background:none; border:none; cursor:pointer; font-size:13px; color:#333; font-family:inherit; padding:6px 8px; border-radius:8px; }
+  .lang:hover { background:#eef1f6; }
+  .lang-menu { position:absolute; top:calc(100% + 8px); right:0; min-width:160px; background:#fff; border:1px solid #e7eaf0; border-radius:10px; padding:6px; box-shadow:0 10px 30px rgba(23,35,59,.14); z-index:60; }
+  .lang-option { display:flex; align-items:center; gap:10px; width:100%; border:none; background:none; padding:9px 10px; border-radius:8px; font-size:13px; color:#333; cursor:pointer; font-family:inherit; text-align:left; }
+  .lang-option:hover { background:#f2f4f9; }
+  .lang-option.active { background:#eef4ff; color:#4d7dfe; font-weight:700; }
+  .content { padding:24px 26px 34px; }
+  .page-title { font-size:26px; font-weight:800; color:#17233b; margin-bottom:22px; }
+  .stats-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:20px; }
+  .stat-card { background:#fff; border-radius:12px; padding:18px 20px; box-shadow:0 1px 3px rgba(23,35,59,.06); }
+  .stat-top { display:flex; justify-content:space-between; align-items:flex-start; gap:10px; }
+  .stat-title { font-size:13.5px; color:#40465a; }
+  .stat-value { font-size:26px; font-weight:800; color:#17233b; margin-top:8px; letter-spacing:-.5px; }
+  .stat-icon { width:46px; height:46px; border-radius:12px; display:grid; place-items:center; flex-shrink:0; }
+  .stat-icon.purple { background:#e5defc; color:#7a5af8; } .stat-icon.amber { background:#fdf1cf; color:#efaf2b; }
+  .stat-icon.green { background:#d4f3e3; color:#1fbf8f; } .stat-icon.orange { background:#fde0d2; color:#f27944; }
+  .stat-trend { display:flex; align-items:center; gap:7px; margin-top:16px; font-size:12.5px; }
+  .stat-trend .up { color:#10b981; font-weight:700; } .stat-trend .down { color:#f43f5e; font-weight:700; }
+  .stat-trend svg.up { color:#10b981; } .stat-trend svg.down { color:#f43f5e; }
+  .panel { background:#fff; border-radius:12px; padding:20px 24px; margin-top:22px; box-shadow:0 1px 3px rgba(23,35,59,.06); }
+  .panel-head { display:flex; align-items:center; justify-content:space-between; margin-bottom:14px; }
+  .panel-head h2 { font-size:19px; font-weight:800; color:#17233b; }
+  .dropdown { display:flex; align-items:center; gap:8px; background:#f7f8fb; border:1px solid #e7eaf0; border-radius:8px; padding:7px 12px; font-size:12px; color:#6b7280; cursor:pointer; font-family:inherit; }
+  .chart { width:100%; height:auto; display:block; }
+  .chart .axis { font-size:11px; fill:#9aa3b5; }
+  .chart .tooltip { font-size:11px; fill:#fff; font-weight:700; }
+  .table-wrap { overflow-x:auto; }
+  table { width:100%; border-collapse:collapse; min-width:760px; }
+  thead th { background:#eef1f6; text-align:left; font-size:12.5px; font-weight:700; color:#17233b; padding:12px 16px; }
+  thead th:first-child { border-radius:8px 0 0 8px; } thead th:last-child { border-radius:0 8px 8px 0; }
+  tbody td { padding:13px 16px; font-size:13px; color:#40465a; border-bottom:1px solid #f0f2f7; }
+  tbody tr:last-child td { border-bottom:none; }
+  .product-cell { display:inline-flex; align-items:center; gap:12px; font-weight:600; color:#17233b; }
+  .product-img { width:34px; height:34px; border-radius:9px; background:#fde0d2; display:grid; place-items:center; font-size:16px; }
+  .status { display:inline-block; padding:6px 14px; border-radius:999px; font-size:11.5px; font-weight:700; color:#fff; }
+  .status-delivered { background:#0dcea7; } .status-pending { background:#f5a623; }
+  .status-cancelled { background:#f43f5e; } .status-processing { background:#4d7dfe; }
+  .banner { position:relative; border-radius:12px; padding:34px 70px; color:#fff; }
+  .banner-date { font-size:12px; opacity:.85; margin-bottom:10px; }
+  .banner h2 { font-size:27px; line-height:1.3; font-weight:800; margin-bottom:10px; }
+  .banner p { font-size:12px; opacity:.8; margin-bottom:18px; }
+  .btn-orange { background:#f5824a; color:#fff; border:none; border-radius:8px; padding:10px 18px; font-size:12px; font-weight:700; cursor:pointer; font-family:inherit; }
+  .banner-arrow { position:absolute; top:50%; transform:translateY(-50%); width:30px; height:30px; border-radius:50%; border:none; cursor:pointer; background:#eef1f6; color:#333; display:grid; place-items:center; }
+  .banner-arrow.left { left:14px; } .banner-arrow.right { right:14px; }
+  .product-carousel { position:relative; margin-top:22px; }
+  .product-track { display:flex; gap:14px; overflow-x:auto; scroll-behavior:smooth; padding:4px 2px 10px; }
+  .product-card { width:176px; flex-shrink:0; background:#fff; border-radius:10px; padding:12px; box-shadow:0 1px 3px rgba(23,35,59,.06); }
+  .product-imgbox { height:150px; display:grid; place-items:center; font-size:76px; }
+  .carousel-arrow { position:absolute; top:50%; transform:translateY(-50%); z-index:2; width:30px; height:30px; border-radius:50%; border:none; cursor:pointer; background:#fff; box-shadow:0 2px 10px rgba(23,35,59,.18); display:grid; place-items:center; color:#333; }
+  .carousel-arrow.left { left:-8px; } .carousel-arrow.right { right:-8px; }
+  .product-info { display:flex; justify-content:space-between; align-items:center; gap:8px; margin-top:6px; }
+  .product-name { font-size:12.5px; font-weight:700; color:#17233b; }
+  .product-price { font-size:12.5px; font-weight:700; color:#3b82f6; margin-top:4px; }
+  .product-rate { display:flex; align-items:center; gap:3px; margin-top:6px; font-size:12px; color:#f5a623; }
+  .product-rate .off { color:#d8dce3; }
+  .product-rate small { color:#9aa3b5; font-size:11px; margin-left:3px; }
+  .fav-btn { width:30px; height:30px; border-radius:8px; background:#f7f8fb; border:1px solid #e7eaf0; cursor:pointer; display:grid; place-items:center; color:#f43f5e; flex-shrink:0; transition:.15s; }
+  .fav-btn:hover { background:#fde8ee; }
+  .fav-btn.active { background:#fde8ee; border-color:#fbd0dc; }
+  .fav-btn.active svg { fill:#f43f5e; }
+  .edit-btn { margin-top:12px; background:#eef0f8; border:none; border-radius:8px; padding:8px 14px; font-size:11px; font-weight:600; color:#17233b; cursor:pointer; font-family:inherit; }
+  .fav-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:20px; }
+  .fav-card { background:#fff; border-radius:10px; padding:14px; box-shadow:0 1px 3px rgba(23,35,59,.06); }
+  .fav-imgbox { position:relative; height:200px; display:grid; place-items:center; font-size:92px; }
+  .card-arrow { position:absolute; top:50%; transform:translateY(-50%); width:28px; height:28px; border-radius:50%; border:none; cursor:pointer; background:#eef1f6; color:#333; display:grid; place-items:center; z-index:2; }
+  .card-arrow.left { left:4px; } .card-arrow.right { right:4px; }
+  .empty-fav { background:#fff; border:1px dashed #d8dce3; border-radius:12px; padding:60px 20px; text-align:center; color:#8b94a7; font-size:14px; }
+  .inbox-wrap { display:flex; gap:20px; align-items:flex-start; }
+  .mail-side { width:175px; flex-shrink:0; background:#fff; border-radius:10px; padding:16px 12px; box-shadow:0 1px 3px rgba(23,35,59,.06); }
+  .compose-btn { width:100%; background:#4d7dfe; color:#fff; border:none; border-radius:8px; padding:10px; font-size:12px; font-weight:700; cursor:pointer; font-family:inherit; box-shadow:0 6px 14px rgba(77,125,254,.3); }
+  .mail-head { font-size:13px; font-weight:800; color:#17233b; margin:16px 6px 8px; }
+  .mail-item { display:flex; align-items:center; gap:8px; width:100%; border:none; background:none; padding:8px 10px; border-radius:8px; font-size:12px; color:#40465a; cursor:pointer; font-family:inherit; }
+  .mail-item .ico { color:#8b94a7; }
+  .mail-item .cnt { margin-left:auto; font-size:11px; color:#8b94a7; }
+  .mail-item.active { background:#e8efff; color:#4d7dfe; font-weight:700; }
+  .mail-item.active .ico, .mail-item.active .cnt { color:#4d7dfe; }
+  .label-item { display:flex; align-items:center; gap:9px; width:100%; border:none; background:none; padding:7px 10px; border-radius:8px; font-size:12px; color:#40465a; cursor:pointer; font-family:inherit; }
+  .label-box { width:14px; height:14px; border-radius:4px; border:2px solid; flex-shrink:0; }
+  .create-label { display:flex; align-items:center; gap:6px; color:#9aa3b5; font-size:11.5px; background:none; border:none; cursor:pointer; padding:8px 10px; font-family:inherit; }
+  .mail-main { flex:1; min-width:0; background:#fff; border-radius:10px; padding:14px 0 0; box-shadow:0 1px 3px rgba(23,35,59,.06); }
+  .mail-top { display:flex; align-items:center; justify-content:space-between; gap:14px; padding:0 16px 12px; }
+  .mail-search { display:flex; align-items:center; gap:8px; background:#eef1f6; border-radius:10px; padding:8px 12px; width:min(300px,50%); color:#8b94a7; }
+  .mail-search input { border:none; outline:none; background:transparent; flex:1; font-size:12.5px; font-family:inherit; }
+  .mail-actions { display:flex; gap:8px; }
+  .icon-sq { width:32px; height:32px; border-radius:8px; border:1px solid #e7eaf0; background:#fff; cursor:pointer; display:grid; place-items:center; color:#333; }
+  .icon-sq:hover { background:#f2f4f9; }
+  .mail-row { display:flex; align-items:center; gap:10px; padding:12px 16px; border-top:1px solid #f0f2f7; }
+  .mail-row:hover { background:#f8f9fc; }
+  .chk { width:16px; height:16px; border:1.5px solid #c9cfd8; border-radius:4px; background:#fff; cursor:pointer; flex-shrink:0; display:grid; place-items:center; color:#fff; padding:0; }
+  .chk.on { background:#4d7dfe; border-color:#4d7dfe; }
+  .star-btn { background:none; border:none; cursor:pointer; color:#c9cfd8; flex-shrink:0; display:grid; place-items:center; }
+  .star-btn.on { color:#f5a623; }
+  .star-btn.on svg { fill:#f5a623; }
+  .mail-from { width:120px; flex-shrink:0; font-size:12px; font-weight:700; color:#17233b; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .mail-tag { flex-shrink:0; font-size:10px; font-weight:700; padding:4px 10px; border-radius:6px; }
+  .tag-primary { background:#d5f6ee; color:#0dcea7; } .tag-work { background:#fdeed3; color:#f59e0b; }
+  .tag-friends { background:#fbdcef; color:#ec4899; } .tag-social { background:#dbe7ff; color:#4d7dfe; }
+  .mail-subj { flex:1; min-width:0; font-size:12px; color:#6b7280; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .mail-time { flex-shrink:0; font-size:11px; color:#8b94a7; }
+  .list-foot { display:flex; align-items:center; justify-content:space-between; padding:14px 4px; font-size:12px; }
+  .foot-arrows { display:flex; gap:8px; }
+  .filter-bar { position:relative; display:flex; align-items:center; gap:14px; background:#fff; border-radius:10px; padding:14px 18px; box-shadow:0 1px 3px rgba(23,35,59,.06); margin-bottom:20px; flex-wrap:wrap; }
+  .filter-ico { color:#17233b; display:grid; place-items:center; }
+  .filter-label { font-size:12.5px; font-weight:700; color:#17233b; }
+  .fgroup { position:relative; }
+  .fbtn { display:flex; align-items:center; gap:10px; background:#fff; border:1px solid #e7eaf0; border-radius:8px; padding:9px 14px; font-size:12px; color:#17233b; cursor:pointer; font-family:inherit; }
+  .fbtn .ico { color:#6b7280; }
+  .dd-menu { position:absolute; top:calc(100% + 8px); left:0; min-width:150px; background:#fff; border:1px solid #e7eaf0; border-radius:10px; padding:6px; box-shadow:0 10px 30px rgba(23,35,59,.14); z-index:40; }
+  .dd-option { display:block; width:100%; text-align:left; border:none; background:none; padding:8px 10px; border-radius:8px; font-size:12px; color:#40465a; cursor:pointer; font-family:inherit; }
+  .dd-option:hover { background:#f2f4f9; }
+  .dd-option.active { background:#eef4ff; color:#4d7dfe; font-weight:700; }
+  .reset-btn { display:flex; align-items:center; gap:8px; background:none; border:none; color:#f43f5e; font-size:12px; font-weight:600; cursor:pointer; font-family:inherit; }
+  .cal-pop { position:absolute; top:calc(100% + 10px); left:0; width:230px; background:#fff; border-radius:12px; padding:16px; box-shadow:0 16px 40px rgba(23,35,59,.18); z-index:50; }
+  .cal-head { display:flex; align-items:center; justify-content:space-between; margin-bottom:12px; font-size:13px; color:#17233b; }
+  .cal-nav { display:flex; gap:6px; }
+  .cal-nav button { width:24px; height:24px; border-radius:6px; border:1px solid #e7eaf0; background:#eef1f6; cursor:pointer; display:grid; place-items:center; color:#333; }
+  .cal-grid { display:grid; grid-template-columns:repeat(7,1fr); gap:4px; text-align:center; }
+  .cal-w { font-size:11px; color:#8b94a7; font-weight:700; padding:4px 0; }
+  .cal-d { font-size:11.5px; color:#40465a; padding:6px 0; border-radius:8px; cursor:pointer; }
+  .cal-d:hover { background:#f2f4f9; }
+  .cal-d.off { color:#c9cfd8; cursor:default; }
+  .cal-d.off:hover { background:none; }
+  .cal-d.on { background:#4d7dfe; color:#fff; font-weight:700; }
+  .cal-note { font-size:10.5px; color:#8b94a7; margin:10px 0; }
+  .apply-btn { width:100%; background:#4d7dfe; color:#fff; border:none; border-radius:8px; padding:9px; font-size:12px; font-weight:700; cursor:pointer; font-family:inherit; }
+  .pill { display:inline-block; padding:6px 14px; border-radius:8px; font-size:11px; font-weight:700; }
+  .pill-completed { background:#c9f3e8; color:#0dcea7; }
+  .pill-processing { background:#e4defc; color:#7a5af8; }
+  .pill-rejected { background:#fbd5dc; color:#f43f5e; }
+  .pill-onHold { background:#fde3cd; color:#f5a623; }
+  .pill-inTransit { background:#e9defc; color:#a56cf5; }
+  .stock-head { display:flex; align-items:center; justify-content:space-between; gap:16px; margin-bottom:16px; }
+  .stock-head .page-title { margin-bottom:0; }
+  .stock-search { display:flex; align-items:center; gap:8px; background:#fff; border:1px solid #e7eaf0; border-radius:10px; padding:9px 14px; width:min(260px,60%); color:#8b94a7; }
+  .stock-search input { border:none; outline:none; background:transparent; flex:1; font-size:12.5px; font-family:inherit; }
+  .stock-card { background:#fff; border:1px solid #e7eaf0; border-radius:10px; }
+  .stock-card thead th { background:#fff; border-bottom:1px solid #eef0f5; border-radius:0; }
+  .stock-card tbody td { padding:14px 16px; }
+  .stock-img { width:44px; height:44px; font-size:22px; }
+  .color-dots { display:flex; gap:6px; }
+  .color-dot { width:14px; height:14px; border-radius:50%; display:inline-block; }
+  .act-btn { width:30px; height:30px; border-radius:8px; border:1px solid #e7eaf0; background:#fff; cursor:pointer; display:inline-grid; place-items:center; color:#6b7280; margin-right:6px; }
+  .act-btn.danger { color:#f43f5e; }
+  .price-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:20px; }
+  .price-card { background:#fff; border-radius:12px; padding:28px 26px; text-align:center; box-shadow:0 1px 3px rgba(23,35,59,.06); display:flex; flex-direction:column; align-items:center; }
+  .price-name { font-size:16px; font-weight:800; color:#17233b; }
+  .price-sub { font-size:11.5px; color:#8b94a7; margin:6px 0 14px; }
+  .price-value { font-size:34px; font-weight:800; color:#4d7dfe; margin-bottom:18px; }
+  .price-card hr { width:100%; border:none; border-top:1px solid #eef0f5; margin:14px 0; }
+  .price-feats { list-style:none; width:100%; }
+  .price-feats li { padding:9px 0; font-size:12.5px; color:#17233b; }
+  .price-feats li.off { color:#c9cfd8; }
+  .price-btn { margin-top:6px; background:#fff; color:#4d7dfe; border:1.5px solid #4d7dfe; border-radius:999px; padding:10px 26px; font-size:12px; font-weight:700; cursor:pointer; font-family:inherit; }
+  .price-btn.solid { background:#4d7dfe; color:#fff; }
+  .price-trial { margin-top:14px; font-size:11.5px; color:#17233b; text-decoration:underline; }
+  .toast { position:fixed; bottom:24px; left:50%; transform:translateX(-50%) translateY(20px); background:#17233b; color:#fff; padding:10px 18px; border-radius:10px; font-size:13px; opacity:0; pointer-events:none; transition:.25s; z-index:100; }
+  .toast.show { opacity:1; transform:translateX(-50%) translateY(0); }
+
+  /* ===== TO-DO LIST STYLES ===== */
+  .todo-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:22px; }
+  .todo-header h1 { font-size:26px; font-weight:800; color:#17233b; margin:0; }
+  .btn-add-task { background:#4d7dfe; color:#fff; border:none; border-radius:8px; padding:11px 22px; font-size:13px; font-weight:700; cursor:pointer; font-family:inherit; transition:.2s; }
+  .btn-add-task:hover { background:#3a6aef; }
+  .todo-container { background:#fff; border:2px solid #4d7dfe; border-radius:12px; overflow:hidden; }
+  .todo-item { display:flex; align-items:center; padding:18px 24px; border-bottom:1px solid #eef0f5; transition:background .2s; }
+  .todo-item:last-child { border-bottom:none; }
+  .todo-item.completed { background:#4d7dfe; }
+  .todo-item.completed .todo-text { color:#fff; }
+  .todo-checkbox { width:22px; height:22px; border:2px solid #c9cfd8; border-radius:5px; margin-right:16px; cursor:pointer; display:grid; place-items:center; flex-shrink:0; background:#fff; transition:.2s; }
+  .todo-checkbox.checked { background:#4d7dfe; border-color:#4d7dfe; }
+  .todo-checkbox.checked::after { content:'✓'; color:#fff; font-size:13px; font-weight:700; }
+  .todo-item.completed .todo-checkbox { background:#fff; border-color:#fff; }
+  .todo-item.completed .todo-checkbox.checked::after { color:#4d7dfe; }
+  .todo-text { flex:1; font-size:14px; color:#40465a; }
+  .todo-actions { display:flex; align-items:center; gap:12px; }
+  .todo-star { font-size:20px; color:#c9cfd8; cursor:pointer; transition:color .2s; background:none; border:none; display:grid; place-items:center; }
+  .todo-star.active { color:#f5a623; }
+  .todo-star.active svg { fill:#f5a623; }
+  .todo-star:hover { color:#f5a623; }
+  .todo-delete { width:28px; height:28px; border-radius:50%; border:1.5px solid #c9cfd8; background:#fff; display:grid; place-items:center; cursor:pointer; color:#8b94a7; transition:.2s; }
+  .todo-delete:hover { border-color:#f43f5e; color:#f43f5e; }
+  .todo-item.completed .todo-delete { background:rgba(255,255,255,.2); border-color:rgba(255,255,255,.4); color:#fff; }
+  .todo-item.completed .todo-delete:hover { background:rgba(255,255,255,.3); }
+  .todo-item.completed .todo-star { color:rgba(255,255,255,.5); }
+  .todo-item.completed .todo-star.active { color:#f5a623; }
+
+  /* ===== CONTACT PAGE STYLES ===== */
+  .contact-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:22px; }
+  .contact-header h1 { font-size:26px; font-weight:800; color:#17233b; margin:0; }
+  .btn-add-contact { background:#4d7dfe; color:#fff; border:none; border-radius:8px; padding:11px 22px; font-size:13px; font-weight:700; cursor:pointer; font-family:inherit; transition:.2s; }
+  .btn-add-contact:hover { background:#3a6aef; }
+  .contact-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:20px; }
+  .contact-card { background:#fff; border-radius:12px; overflow:hidden; box-shadow:0 1px 3px rgba(23,35,59,.06); text-align:center; padding-bottom:22px; transition:transform .2s, box-shadow .2s; }
+  .contact-card:hover { transform:translateY(-3px); box-shadow:0 8px 24px rgba(23,35,59,.12); }
+  .contact-img { width:100%; height:160px; object-fit:cover; display:block; }
+  .contact-name { font-size:14px; font-weight:800; color:#17233b; margin-top:16px; }
+  .contact-email { font-size:11.5px; color:#8b94a7; margin-top:7px; }
+  .msg-btn { margin-top:15px; display:inline-flex; align-items:center; gap:8px; background:#fff; border:1px solid #e7eaf0; border-radius:8px; padding:8px 20px; font-size:12px; color:#40465a; cursor:pointer; font-family:inherit; transition:.2s; }
+  .msg-btn:hover { background:#e8efff; border-color:#4d7dfe; color:#4d7dfe; }
+
+  /* ===== INVOICE PAGE STYLES ===== */
+  .invoice-card { background:#fff; border-radius:12px; padding:34px 34px 38px; box-shadow:0 1px 3px rgba(23,35,59,.06); }
+  .invoice-top { display:grid; grid-template-columns:1fr 1fr 1fr; gap:24px; margin-bottom:30px; padding:0 60px; }
+  .inv-label { font-size:12.5px; color:#40465a; margin-bottom:10px; }
+  .inv-name { font-size:13.5px; font-weight:700; color:#17233b; margin-bottom:7px; }
+  .inv-addr { font-size:11.5px; color:#8b94a7; }
+  .inv-dates { display:flex; flex-direction:column; gap:10px; font-size:12.5px; color:#40465a; padding-top:2px; }
+  .inv-dates b { color:#17233b; font-weight:600; }
+  .invoice-table { width:100%; border-collapse:collapse; min-width:640px; }
+  .invoice-table thead th { background:#eaf6fe; text-align:center; font-size:12.5px; font-weight:700; color:#17233b; padding:12px 16px; border-top:2px solid #35a3f5; border-bottom:2px solid #35a3f5; border-radius:0; }
+  .invoice-table thead th:first-child { border-left:2px solid #35a3f5; }
+  .invoice-table thead th:last-child { border-right:2px solid #35a3f5; }
+  .invoice-table tbody td { padding:17px 16px; text-align:center; font-size:12.5px; color:#40465a; border-bottom:1px solid #f0f2f7; }
+  .invoice-total { display:flex; justify-content:flex-end; align-items:center; gap:12px; padding:20px 10px 0; font-size:13px; color:#17233b; }
+  .invoice-total .t-label { font-weight:800; }
+  .invoice-total .t-value { font-weight:800; }
+  .invoice-actions { display:flex; justify-content:flex-end; align-items:center; gap:12px; margin-top:30px; }
+  .print-btn { width:38px; height:38px; border-radius:8px; border:1px solid #e7eaf0; background:#fff; cursor:pointer; display:grid; place-items:center; color:#333; transition:.2s; }
+  .print-btn:hover { background:#f2f4f9; }
+  .send-btn { display:flex; align-items:center; gap:14px; background:#4d7dfe; color:#fff; border:none; border-radius:8px; padding:8px 10px 8px 24px; font-size:13px; font-weight:700; cursor:pointer; font-family:inherit; transition:.2s; }
+  .send-btn:hover { background:#3a6aef; }
+  .send-btn .send-ico { width:30px; height:30px; border-radius:7px; background:rgba(255,255,255,.25); display:grid; place-items:center; }
+
+  /* ===== UI ELEMENTS PAGE STYLES ===== */
+  .ui-head { display:flex; justify-content:space-between; align-items:center; gap:16px; margin-bottom:22px; flex-wrap:wrap; }
+  .ui-head .page-title { margin-bottom:0; }
+  .ui-toolbar { display:flex; align-items:center; gap:8px; background:#fff; border:1px solid #e7eaf0; border-radius:10px; padding:6px 8px; }
+  .ui-toolbar .icon-sq { border:none; }
+  .ui-toolbar .fbtn { border:none; background:none; padding:8px 12px; }
+  .ui-card { background:#fff; border-radius:12px; padding:22px 26px; margin-bottom:20px; box-shadow:0 1px 3px rgba(23,35,59,.06); }
+  .ui-card.bordered { border:2px solid #35a3f5; background:#f8fbff; }
+  .ui-card h2 { font-size:16px; font-weight:800; color:#17233b; margin-bottom:24px; }
+  .chart-flex { display:flex; align-items:center; justify-content:space-around; gap:50px; flex-wrap:wrap; padding:12px 0 8px; }
+  .bar-group { display:flex; align-items:flex-end; gap:7px; height:130px; }
+  .bar { width:6px; border-radius:3px; display:block; }
+  .pie { width:92px; height:92px; border-radius:50%; flex-shrink:0; }
+  .donut { width:92px; height:92px; border-radius:50%; position:relative; flex-shrink:0; }
+  .donut::after { content:""; position:absolute; inset:19px; border-radius:50%; background:#fff; }
+  .ui-card.bordered .donut::after { background:#f8fbff; }
+
+  /* ===== TEAM PAGE STYLES ===== */
+  .team-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:22px; }
+  .team-header h1 { font-size:26px; font-weight:800; color:#17233b; margin:0; }
+  .btn-add-member { background:#4d7dfe; color:#fff; border:none; border-radius:8px; padding:11px 22px; font-size:13px; font-weight:700; cursor:pointer; font-family:inherit; transition:.2s; }
+  .btn-add-member:hover { background:#3a6aef; }
+  .team-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:20px; }
+  .team-card { position:relative; background:#fff; border-radius:12px; padding:28px 16px 24px; text-align:center; box-shadow:0 1px 3px rgba(23,35,59,.06); transition:transform .2s, box-shadow .2s; }
+  .team-card:hover { transform:translateY(-3px); box-shadow:0 8px 24px rgba(23,35,59,.12); }
+  .team-avatar { width:72px; height:72px; border-radius:50%; object-fit:cover; }
+  .team-edit { position:absolute; top:86px; right:16px; width:26px; height:26px; border-radius:50%; border:none; background:#f2f4f9; color:#b6bdca; display:grid; place-items:center; cursor:pointer; transition:.2s; }
+  .team-edit:hover { background:#e8efff; color:#4d7dfe; }
+  .team-name { font-size:13.5px; font-weight:800; color:#17233b; margin-top:16px; }
+  .team-role { font-size:11.5px; color:#8b94a7; margin-top:7px; }
+  .team-email { font-size:11px; color:#9aa3b5; margin-top:9px; word-break:break-all; }
+
+  /* ===== CALENDAR PAGE STYLES ===== */
+  .calendar-layout { display:grid; grid-template-columns:340px 1fr; gap:24px; }
+  .calendar-sidebar { background:#fff; border-radius:12px; padding:24px; box-shadow:0 1px 3px rgba(23,35,59,.06); }
+  .btn-add-event { width:100%; background:#4d7dfe; color:#fff; border:none; border-radius:8px; padding:12px; font-size:13px; font-weight:700; cursor:pointer; font-family:inherit; margin-bottom:24px; }
+  .event-list { display:flex; flex-direction:column; gap:16px; }
+  .event-item { display:flex; gap:14px; padding-bottom:16px; border-bottom:1px solid #f0f2f7; }
+  .event-item:last-child { border-bottom:none; padding-bottom:0; }
+  .event-avatar { width:44px; height:44px; border-radius:50%; background:#f0f2f7; flex-shrink:0; display:grid; place-items:center; font-size:20px; }
+  .event-info { flex:1; min-width:0; }
+  .event-title { font-size:13.5px; font-weight:700; color:#17233b; margin-bottom:4px; }
+  .event-time { font-size:12px; color:#8b94a7; margin-bottom:6px; }
+  .event-location { font-size:11.5px; color:#40465a; line-height:1.4; margin-bottom:8px; }
+  .event-attendees { display:flex; align-items:center; gap:-8px; }
+  .event-attendee { width:28px; height:28px; border-radius:50%; background:linear-gradient(135deg,#fbd0e0,#e6b7d6); border:2px solid #fff; display:grid; place-items:center; font-size:11px; margin-left:-8px; }
+  .event-attendee:first-child { margin-left:0; }
+  .event-attendee.more { background:#eef1f6; color:#40465a; font-size:10px; font-weight:700; }
+  .calendar-main { background:#fff; border-radius:12px; padding:24px; box-shadow:0 1px 3px rgba(23,35,59,.06); }
+  .calendar-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:24px; }
+  .calendar-nav { display:flex; align-items:center; gap:12px; }
+  .calendar-nav button { width:32px; height:32px; border-radius:8px; border:1px solid #e7eaf0; background:#fff; cursor:pointer; display:grid; place-items:center; color:#333; }
+  .calendar-nav button:hover { background:#f2f4f9; }
+  .calendar-title { font-size:20px; font-weight:800; color:#17233b; }
+  .calendar-views { display:flex; gap:4px; background:#f7f8fb; padding:4px; border-radius:8px; }
+  .calendar-view { padding:8px 16px; border-radius:6px; font-size:12px; font-weight:600; color:#6b7280; cursor:pointer; border:none; background:transparent; font-family:inherit; }
+  .calendar-view.active { background:#4d7dfe; color:#fff; }
+  .calendar-grid { display:grid; grid-template-columns:repeat(7,1fr); gap:1px; background:#f0f2f7; border-radius:8px; overflow:hidden; }
+  .calendar-day-header { background:#f7f8fb; padding:12px; text-align:center; font-size:12px; font-weight:700; color:#40465a; }
+  .calendar-day { background:#fff; min-height:100px; padding:8px; position:relative; }
+  .calendar-day.other-month { background:#fafbfc; color:#c9cfd8; }
+  .calendar-day-number { font-size:12px; color:#40465a; font-weight:600; margin-bottom:6px; }
+  .calendar-day.other-month .calendar-day-number { color:#c9cfd8; }
+  .event-bar { padding:4px 8px; border-radius:4px; font-size:10px; font-weight:600; margin-bottom:4px; cursor:pointer; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .event-bar.purple { background:#e5defc; color:#7a5af8; }
+  .event-bar.pink { background:#fbdcef; color:#ec4899; }
+  .event-bar.orange { background:#fde0d2; color:#f27944; }
+  .event-bar.blue { background:#dbe7ff; color:#4d7dfe; }
+  .event-popup { position:absolute; background:#fff; border-radius:12px; box-shadow:0 10px 40px rgba(23,35,59,.18); padding:20px; z-index:100; width:320px; }
+  .event-popup-img { width:100%; height:140px; border-radius:8px; background:#f0f2f7; display:grid; place-items:center; font-size:64px; margin-bottom:16px; }
+  .event-popup-title { font-size:16px; font-weight:800; color:#17233b; margin-bottom:6px; }
+  .event-popup-org { font-size:13px; color:#40465a; margin-bottom:8px; }
+  .event-popup-time { font-size:12px; color:#8b94a7; margin-bottom:12px; }
+  .event-popup-location { font-size:12px; color:#40465a; margin-bottom:16px; }
+  .event-popup-attendees { display:flex; align-items:center; gap:-8px; }
+  .event-popup-attendee { width:32px; height:32px; border-radius:50%; background:linear-gradient(135deg,#fbd0e0,#e6b7d6); border:2px solid #fff; display:grid; place-items:center; font-size:12px; margin-left:-8px; }
+  .event-popup-attendee:first-child { margin-left:0; }
+  .event-popup-attendee.more { background:#eef1f6; color:#40465a; font-size:11px; font-weight:700; }
+
+  @media (max-width:1100px) { .stats-grid { grid-template-columns:repeat(2,1fr); } .fav-grid { grid-template-columns:repeat(2,1fr); } .contact-grid { grid-template-columns:repeat(2,1fr); } .team-grid { grid-template-columns:repeat(2,1fr); } .calendar-layout { grid-template-columns:1fr; } }
+  @media (max-width:900px) { .sidebar { display:none; } .inbox-wrap { flex-direction:column; } .mail-side { width:100%; } .price-grid { grid-template-columns:1fr; } .invoice-top { grid-template-columns:1fr; padding:0; } }
+  @media (max-width:620px) { .stats-grid, .fav-grid { grid-template-columns:1fr; } .search { display:none; } .user-meta { display:none; } .banner { padding:28px 50px; } .mail-from { width:80px; } .mail-tag { display:none; } .contact-grid { grid-template-columns:1fr; } .team-grid { grid-template-columns:1fr; } }
+</style>
+</head>
+<body>
+<svg style="display:none">
+  <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.5" y2="16.5"/></symbol>
+  <symbol id="i-bell" viewBox="0 0 24 24"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></symbol>
+  <symbol id="i-chevron" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></symbol>
+  <symbol id="i-left" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></symbol>
+  <symbol id="i-right" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></symbol>
+  <symbol id="i-heart" viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></symbol>
+  <symbol id="i-star" viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></symbol>
+  <symbol id="i-users" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></symbol>
+  <symbol id="i-box" viewBox="0 0 24 24"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></symbol>
+  <symbol id="i-chart" viewBox="0 0 24 24"><polyline points="3 17 9 11 13 15 21 7"/><polyline points="15 7 21 7 21 13"/></symbol>
+  <symbol id="i-history" viewBox="0 0 24 24"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></symbol>
+  <symbol id="i-up" viewBox="0 0 24 24"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></symbol>
+  <symbol id="i-down" viewBox="0 0 24 24"><polyline points="23 18 13.5 8.5 8.5 13.5 1 6"/><polyline points="17 18 23 18 23 12"/></symbol>
+  <symbol id="i-mail" viewBox="0 0 24 24"><rect x="2" y="4" width="20" height="16" rx="2"/><polyline points="22,6 12,13 2,6"/></symbol>
+  <symbol id="i-send" viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></symbol>
+  <symbol id="i-edit" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></symbol>
+  <symbol id="i-alert" viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></symbol>
+  <symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></symbol>
+  <symbol id="i-trash" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></symbol>
+  <symbol id="i-archive" viewBox="0 0 24 24"><polyline points="21 8 21 21 3 21 3 8"/><rect x="1" y="3" width="22" height="5"/><line x1="10" y1="12" x2="14" y2="12"/></symbol>
+  <symbol id="i-dot" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/></symbol>
+  <symbol id="i-plus" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></symbol>
+  <symbol id="i-filter" viewBox="0 0 24 24"><path d="M22 3H2l8 9.46V19l4 2v-8.54L22 3z"/></symbol>
+  <symbol id="i-print" viewBox="0 0 24 24"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></symbol>
+</svg>
+
+<div class="app">
+  <aside class="sidebar">
+    <div class="logo"><span>Dash</span>Stack</div>
+    <nav id="nav-main"></nav>
+    <div class="nav-sep"></div>
+    <div class="nav-label" data-i18n="pages">Pages</div>
+    <nav id="nav-pages"></nav>
+    <div class="nav-sep"></div>
+    <nav id="nav-foot"></nav>
+  </aside>
+  <div class="main">
+    <header class="topbar">
+      <label class="search"><svg class="ico" width="15" height="15"><use href="#i-search"/></svg><input placeholder="Search" data-i18n-ph="search" /></label>
+      <div class="topbar-right">
+        <button class="bell"><svg class="ico" width="19" height="19"><use href="#i-bell"/></svg><span class="badge">6</span></button>
+        <div class="lang-wrap">
+          <button class="lang" id="langBtn"><span id="langFlag">🇧</span><span id="langName">English</span><svg class="ico" width="14" height="14"><use href="#i-chevron"/></svg></button>
+          <div class="lang-menu" id="langMenu" hidden></div>
+        </div>
+        <button class="user"><span class="avatar">👩</span><span class="user-meta"><b>Moni Roy</b><small data-i18n="admin">Admin</small></span><svg class="ico muted" width="14" height="14"><use href="#i-chevron"/></svg></button>
+      </div>
+    </header>
+    <main class="content">
+
+      <!-- DASHBOARD -->
+      <section id="page-dashboard" class="page-section">
+        <h1 class="page-title" data-i18n="dashboard">Dashboard</h1>
+        <section class="stats-grid" id="stats"></section>
+        <section class="panel"><div class="panel-head"><h2 data-i18n="salesDetails">Sales Details</h2><button class="dropdown"><span data-i18n="october">October</span> <svg class="ico" width="13" height="13"><use href="#i-chevron"/></svg></button></div><svg class="chart" id="chart" viewBox="0 0 1060 300"></svg></section>
+        <section class="panel"><div class="panel-head"><h2 data-i18n="dealsDetails">Deals Details</h2><button class="dropdown"><span data-i18n="october">October</span> <svg class="ico" width="13" height="13"><use href="#i-chevron"/></svg></button></div>
+          <div class="table-wrap"><table><thead><tr><th data-i18n="productName">Product Name</th><th data-i18n="location">Location</th><th data-i18n="dateTime">Date - Time</th><th data-i18n="piece">Piece</th><th data-i18n="amount">Amount</th><th data-i18n="status">Status</th></tr></thead><tbody id="deals"></tbody></table></div>
+        </section>
+      </section>
+
+      <!-- PRODUCTS -->
+      <section id="page-products" class="page-section" hidden>
+        <h1 class="page-title" data-i18n="products">Products</h1>
+        <div class="banner" id="banner">
+          <button class="banner-arrow left" id="b-prev"><svg class="ico" width="14" height="14"><use href="#i-left"/></svg></button>
+          <div><div class="banner-date" id="b-date"></div><h2 id="b-title"></h2><p id="b-text"></p><button class="btn-orange" data-i18n="getStarted">Get Started</button></div>
+          <button class="banner-arrow right" id="b-next"><svg class="ico" width="14" height="14"><use href="#i-right"/></svg></button>
+        </div>
+        <div class="product-carousel">
+          <button class="carousel-arrow left" id="pc-prev"><svg class="ico" width="14" height="14"><use href="#i-left"/></svg></button>
+          <div class="product-track" id="productTrack"></div>
+          <button class="carousel-arrow right" id="pc-next"><svg class="ico" width="14" height="14"><use href="#i-right"/></svg></button>
+        </div>
+      </section>
+
+      <!-- FAVORITES -->
+      <section id="page-favorites" class="page-section" hidden>
+        <h1 class="page-title" data-i18n="favorites">Favorites</h1>
+        <div class="fav-grid" id="favGrid"></div>
+      </section>
+
+      <!-- INBOX -->
+      <section id="page-inbox" class="page-section" hidden>
+        <h1 class="page-title" data-i18n="inbox">Inbox</h1>
+        <div class="inbox-wrap">
+          <aside class="mail-side" id="mailSide">
+            <button class="compose-btn" id="composeBtn" data-i18n="compose">+ Compose</button>
+            <div class="mail-head" data-i18n="myEmail">My Email</div>
+            <nav id="folderList"></nav>
+            <div class="mail-head" data-i18n="label">Label</div>
+            <div id="labelList"></div>
+            <button class="create-label"><svg class="ico" width="12" height="12"><use href="#i-plus"/></svg><span data-i18n="createNewLabel">Create New Label</span></button>
+          </aside>
+          <section class="mail-main">
+            <div class="mail-top">
+              <label class="mail-search"><svg class="ico" width="14" height="14"><use href="#i-search"/></svg><input id="mailSearch" placeholder="Search mail" data-i18n-ph="searchMail" /></label>
+              <div class="mail-actions">
+                <button class="icon-sq"><svg class="ico" width="15" height="15"><use href="#i-archive"/></svg></button>
+                <button class="icon-sq"><svg class="ico" width="15" height="15"><use href="#i-dot"/></svg></button>
+                <button class="icon-sq"><svg class="ico" width="15" height="15"><use href="#i-trash"/></svg></button>
+              </div>
+            </div>
+            <div id="mailList"></div>
+            <div class="list-foot" style="padding:14px 16px;"><span class="muted" data-i18n="mailFoot">Showing 1-12 of 1,253</span>
+              <span class="foot-arrows"><button class="icon-sq"><svg class="ico" width="14" height="14"><use href="#i-left"/></svg></button><button class="icon-sq"><svg class="ico" width="14" height="14"><use href="#i-right"/></svg></button></span></div>
+          </section>
+        </div>
+      </section>
+
+      <!-- ORDER LISTS -->
+      <section id="page-orderLists" class="page-section" hidden>
+        <h1 class="page-title" data-i18n="orderLists">Order Lists</h1>
+        <div class="filter-bar">
+          <span class="filter-ico"><svg class="ico" width="16" height="16"><use href="#i-filter"/></svg></span>
+          <span class="filter-label" data-i18n="filterBy">Filter By</span>
+          <div class="fgroup"><button class="fbtn" id="dateBtn"><span data-i18n="date">Date</span> <svg class="ico" width="13" height="13"><use href="#i-chevron"/></svg></button><div class="cal-pop" id="calPop" hidden></div></div>
+          <div class="fgroup"><button class="fbtn" id="typeBtn"><span data-i18n="orderType">Order Type</span> <svg class="ico" width="13" height="13"><use href="#i-chevron"/></svg></button><div class="dd-menu" id="ddType" hidden></div></div>
+          <div class="fgroup"><button class="fbtn" id="statusBtn"><span data-i18n="orderStatus">Order Status</span> <svg class="ico" width="13" height="13"><use href="#i-chevron"/></svg></button><div class="dd-menu" id="ddStatus" hidden></div></div>
+          <button class="reset-btn" id="resetBtn"><svg class="ico" width="14" height="14"><use href="#i-history"/></svg><span data-i18n="resetFilter">Reset Filter</span></button>
+        </div>
+        <div class="table-wrap"><table><thead><tr><th data-i18n="id">ID</th><th data-i18n="name">Name</th><th data-i18n="address">Address</th><th data-i18n="date">Date</th><th data-i18n="type">Type</th><th data-i18n="status">Status</th></tr></thead><tbody id="orderBody"></tbody></table></div>
+        <div class="list-foot"><span class="muted" data-i18n="ordersFoot">Showing 1-09 of 78</span>
+          <span class="foot-arrows"><button class="icon-sq"><svg class="ico" width="14" height="14"><use href="#i-left"/></svg></button><button class="icon-sq"><svg class="ico" width="14" height="14"><use href="#i-right"/></svg></button></span></div>
+      </section>
+
+      <!-- PRODUCT STOCK -->
+      <section id="page-productStock" class="page-section" hidden>
+        <div class="stock-head">
+          <h1 class="page-title" data-i18n="productStock">Product Stock</h1>
+          <label class="stock-search"><svg class="ico" width="14" height="14"><use href="#i-search"/></svg><input id="stockQuery" placeholder="Search product name" data-i18n-ph="searchProduct" /></label>
+        </div>
+        <div class="stock-card table-wrap">
+          <table>
+            <thead><tr><th data-i18n="image">Image</th><th data-i18n="productName">Product Name</th><th data-i18n="category">Category</th><th data-i18n="price">Price</th><th data-i18n="piece">Piece</th><th data-i18n="availableColor">Available Color</th><th data-i18n="action">Action</th></tr></thead>
+            <tbody id="stockBody"></tbody>
+          </table>
+        </div>
+        <div class="list-foot"><span class="muted" data-i18n="ordersFoot">Showing 1-09 of 78</span>
+          <span class="foot-arrows"><button class="icon-sq"><svg class="ico" width="14" height="14"><use href="#i-left"/></svg></button><button class="icon-sq"><svg class="ico" width="14" height="14"><use href="#i-right"/></svg></button></span></div>
+      </section>
+
+      <!-- PRICING -->
+      <section id="page-pricing" class="page-section" hidden>
+        <h1 class="page-title" data-i18n="pricing">Pricing</h1>
+        <div class="price-grid">
+          <article class="price-card"><b class="price-name" data-i18n="basic">Basic</b><span class="price-sub" data-i18n="monthlyCharge">Monthly Charge</span><div class="price-value">$14.99</div><hr />
+            <ul class="price-feats"><li data-i18n="freeSetup">Free Setup</li><li data-i18n="bandwidth">Bandwidth Limit 10 GB</li><li data-i18n="userConn">20 User Connection</li><li class="off" data-i18n="analytics">Analytics Report</li><li class="off" data-i18n="publicApi">Public API Access</li><li class="off" data-i18n="plugins">Plugins Intregation</li><li class="off" data-i18n="custom">Custom Content Management</li></ul><hr />
+            <button class="price-btn" data-i18n="getStarted">Get Started</button><a class="price-trial" href="#" data-i18n="startTrial">Start Your 30 Day Free Trial</a></article>
+          <article class="price-card"><b class="price-name" data-i18n="standard">Standard</b><span class="price-sub" data-i18n="monthlyCharge">Monthly Charge</span><div class="price-value">$49.99</div><hr />
+            <ul class="price-feats"><li data-i18n="freeSetup">Free Setup</li><li data-i18n="bandwidth">Bandwidth Limit 10 GB</li><li data-i18n="userConn">20 User Connection</li><li data-i18n="analytics">Analytics Report</li><li data-i18n="publicApi">Public API Access</li><li class="off" data-i18n="plugins">Plugins Intregation</li><li class="off" data-i18n="custom">Custom Content Management</li></ul><hr />
+            <button class="price-btn" data-i18n="getStarted">Get Started</button><a class="price-trial" href="#" data-i18n="startTrial">Start Your 30 Day Free Trial</a></article>
+          <article class="price-card"><b class="price-name" data-i18n="premium">Premium</b><span class="price-sub" data-i18n="monthlyCharge">Monthly Charge</span><div class="price-value">$89.99</div><hr />
+            <ul class="price-feats"><li data-i18n="freeSetup">Free Setup</li><li data-i18n="bandwidth">Bandwidth Limit 10 GB</li><li data-i18n="userConn">20 User Connection</li><li data-i18n="analytics">Analytics Report</li><li data-i18n="publicApi">Public API Access</li><li data-i18n="plugins">Plugins Intregation</li><li data-i18n="custom">Custom Content Management</li></ul><hr />
+            <button class="price-btn solid" data-i18n="getStarted">Get Started</button><a class="price-trial" href="#" data-i18n="startTrial">Start Your 30 Day Free Trial</a></article>
+        </div>
+      </section>
+
+      <!-- CALENDAR -->
+      <section id="page-calendar" class="page-section" hidden>
+        <h1 class="page-title" data-i18n="calendar">Calender</h1>
+        <div class="calendar-layout">
+          <aside class="calendar-sidebar">
+            <button class="btn-add-event" data-i18n="addNewEvent">+ Add New Event</button>
+            <div style="font-size:13.5px;font-weight:700;color:#17233b;margin-bottom:16px;" data-i18n="youAreGoingTo">You are going to</div>
+            <div class="event-list" id="eventList"></div>
+          </aside>
+          <div class="calendar-main">
+            <div class="calendar-header">
+              <div class="calendar-nav">
+                <button id="calPrev"><svg class="ico" width="16" height="16"><use href="#i-left"/></svg></button>
+                <div class="calendar-title" id="calTitle">October 2026</div>
+                <button id="calNext"><svg class="ico" width="16" height="16"><use href="#i-right"/></svg></button>
+              </div>
+              <div class="calendar-views">
+                <button class="calendar-view" data-view="day" data-i18n="day">Day</button>
+                <button class="calendar-view" data-view="week" data-i18n="week">Week</button>
+                <button class="calendar-view active" data-view="month" data-i18n="month">Month</button>
+              </div>
+            </div>
+            <div class="calendar-grid" id="calendarGrid"></div>
+            <div class="event-popup" id="eventPopup" hidden>
+              <div class="event-popup-img" id="popupImg">👥</div>
+              <div class="event-popup-title" id="popupTitle">Design Conference</div>
+              <div class="event-popup-org" id="popupOrg">Zillul Design Agency</div>
+              <div class="event-popup-time" id="popupTime">Today 07:19 AM</div>
+              <div class="event-popup-location" id="popupLocation">56 Davion Mission Suite 157</div>
+              <div class="event-popup-attendees" id="popupAttendees"></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- TO-DO LIST -->
+      <section id="page-todo" class="page-section" hidden>
+        <div class="todo-header">
+          <h1 data-i18n="todoList">To-Do List</h1>
+          <button class="btn-add-task" data-i18n="addNewTask">Add New Task</button>
+        </div>
+        <div class="todo-container" id="todoContainer"></div>
+      </section>
+
+      <!-- CONTACT -->
+      <section id="page-contact" class="page-section" hidden>
+        <div class="contact-header">
+          <h1 data-i18n="contact">Contact</h1>
+          <button class="btn-add-contact" data-i18n="addNewContact">Add New Contact</button>
+        </div>
+        <div class="contact-grid" id="contactGrid"></div>
+      </section>
+
+      <!-- INVOICE -->
+      <section id="page-invoice" class="page-section" hidden>
+        <h1 class="page-title" data-i18n="invoice">Invoice</h1>
+        <div class="invoice-card">
+          <div class="invoice-top">
+            <div>
+              <div class="inv-label" data-i18n="invoiceFrom">Invoice From :</div>
+              <div class="inv-name">Virginia Walker</div>
+              <div class="inv-addr">3694 Krajcik Locks Suite 635</div>
+            </div>
+            <div>
+              <div class="inv-label" data-i18n="invoiceTo">Invoice To :</div>
+              <div class="inv-name">Austin Miller</div>
+              <div class="inv-addr">Brookview</div>
+            </div>
+            <div class="inv-dates">
+              <span><span data-i18n="invoiceDate">Invoice Date :</span> <b>12 Nov 2026</b></span>
+              <span><span data-i18n="dueDate">Due Date :</span> <b>25 Dec 2026</b></span>
+            </div>
+          </div>
+          <div class="table-wrap">
+            <table class="invoice-table">
+              <thead>
+                <tr>
+                  <th data-i18n="serialNo">Serial No.</th>
+                  <th data-i18n="description">Description</th>
+                  <th data-i18n="quantity">Quantity</th>
+                  <th data-i18n="baseCost">Base Cost</th>
+                  <th data-i18n="totalCost">Total Cost</th>
+                </tr>
+              </thead>
+              <tbody id="invoiceBody"></tbody>
+            </table>
+          </div>
+          <div class="invoice-total">
+            <span class="t-label" data-i18n="total">Total</span>
+            <span>=</span>
+            <span class="t-value" id="invoiceTotal">$4680</span>
+          </div>
+          <div class="invoice-actions">
+            <button class="print-btn" id="printBtn" title="Print"><svg class="ico" width="16" height="16"><use href="#i-print"/></svg></button>
+            <button class="send-btn" id="sendBtn"><span data-i18n="send">Send</span><span class="send-ico"><svg class="ico" width="14" height="14"><use href="#i-send"/></svg></span></button>
+          </div>
+        </div>
+      </section>
+
+      <!-- UI ELEMENTS -->
+      <section id="page-uiElements" class="page-section" hidden>
+        <div class="ui-head">
+          <h1 class="page-title" data-i18n="uiElements">UI Elements</h1>
+          <div class="ui-toolbar">
+            <button class="icon-sq"><svg class="ico" width="15" height="15"><use href="#i-filter"/></svg></button>
+            <button class="fbtn"><span data-i18n="filterBy">Filter By</span></button>
+            <div class="fgroup">
+              <button class="fbtn" id="chartsBtn"><span data-i18n="charts">Charts</span><svg class="ico" width="13" height="13"><use href="#i-chevron"/></svg></button>
+              <div class="dd-menu" id="chartsMenu" hidden></div>
+            </div>
+          </div>
+        </div>
+        <div class="ui-card bordered" id="card-bar">
+          <h2 data-i18n="barChart">Bar Chart</h2>
+          <div class="chart-flex" id="barChartRow"></div>
+        </div>
+        <div class="ui-card" id="card-pie">
+          <h2 data-i18n="pieChart">Pie Chart</h2>
+          <div class="chart-flex">
+            <div class="pie" style="background:conic-gradient(#dfe6fb 0 270deg,#3d5af1 270deg 360deg)"></div>
+            <div class="pie" style="background:conic-gradient(#c05cf0 0 90deg,#dfe6fb 90deg 360deg)"></div>
+            <div class="pie" style="background:conic-gradient(#f0853f 0 140deg,#dfe6fb 140deg 360deg)"></div>
+            <div class="pie" style="background:conic-gradient(#dfe6fb 0 200deg,#3d8bf2 200deg 360deg)"></div>
+          </div>
+        </div>
+        <div class="ui-card" id="card-donut">
+          <h2 data-i18n="donutChart">Donut Chart</h2>
+          <div class="chart-flex">
+            <div class="donut" style="background:conic-gradient(#14b8a6 0 30%,#d8dce3 30% 100%)"></div>
+            <div class="donut" style="background:conic-gradient(#4d9be6 0 25%,#d8dce3 25% 92%,#f5824a 92% 100%)"></div>
+            <div class="donut" style="background:conic-gradient(#14b8a6 0 40%,#d8dce3 40% 80%,#eec643 80% 100%)"></div>
+            <div class="donut" style="background:conic-gradient(#eec643 0 15%,#14b8a6 15% 55%,#4d9be6 55% 75%,#f5824a 75% 100%)"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- TEAM -->
+      <section id="page-team" class="page-section" hidden>
+        <div class="team-header">
+          <h1 data-i18n="team">Team</h1>
+          <button class="btn-add-member" id="addMemberBtn" data-i18n="addNewMember">Add New Member</button>
+        </div>
+        <div class="team-grid" id="teamGrid"></div>
+      </section>
+
+    </main>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+  const I18N = {
+    en: { search:"Search", pages:"Pages", dashboard:"Dashboard", products:"Products", favorites:"Favorites", inbox:"Inbox", orderLists:"Order Lists", productStock:"Product Stock", pricing:"Pricing", calendar:"Calender", todo:"To-Do", contact:"Contact", invoice:"Invoice", uiElements:"UI Elements", team:"Team", table:"Table", settings:"Settings", logout:"Logout", totalUser:"Total User", totalOrder:"Total Order", totalSales:"Total Sales", totalPending:"Total Pending", upYesterday:"Up from yesterday", upWeek:"Up from past week", downYesterday:"Down from yesterday", salesDetails:"Sales Details", dealsDetails:"Deals Details", october:"October", productName:"Product Name", location:"Location", dateTime:"Date - Time", piece:"Piece", amount:"Amount", status:"Status", getStarted:"Get Started", editProduct:"Edit Product", delivered:"Delivered", pending:"Pending", cancelled:"Cancelled", processing:"Processing", admin:"Admin", noFav:"No favorites yet — add products from the Products page.", favAdd:"Added to favorites", favRemove:"Removed from favorites", compose:"+ Compose", composeOpen:"Compose window opened", myEmail:"My Email", label:"Label", createNewLabel:"Create New Label", searchMail:"Search mail", noMail:"No mails found", starred:"Starred", sent:"Sent", draft:"Draft", spam:"Spam", important:"Important", bin:"Bin", primary:"Primary", social:"Social", work:"Work", friends:"Friends", mailFoot:"Showing 1-12 of 1,253", filterBy:"Filter By", date:"Date", orderType:"Order Type", orderStatus:"Order Status", resetFilter:"Reset Filter", multiDate:"*You can choose multiple date", applyNow:"Apply Now", datesApplied:"Dates applied", id:"ID", name:"Name", address:"Address", type:"Type", image:"Image", category:"Category", price:"Price", availableColor:"Available Color", action:"Action", searchProduct:"Search product name", stockRemoved:"Product removed", ordersFoot:"Showing 1-09 of 78", completed:"Completed", rejected:"Rejected", onHold:"On Hold", inTransit:"In Transit", electric:"Electric", book:"Book", medicine:"Medicine", mobile:"Mobile", watch:"Watch", digital:"Digital Product", fashion:"Fashion", electronic:"Electronic", basic:"Basic", standard:"Standard", premium:"Premium", monthlyCharge:"Monthly Charge", freeSetup:"Free Setup", bandwidth:"Bandwidth Limit 10 GB", userConn:"20 User Connection", analytics:"Analytics Report", publicApi:"Public API Access", plugins:"Plugins Intregation", custom:"Custom Content Management", startTrial:"Start Your 30 Day Free Trial", todoList:"To-Do List", addNewTask:"Add New Task", taskRemoved:"Task removed", taskCompleted:"Task completed", taskUncompleted:"Task marked as uncompleted", addNewContact:"Add New Contact", message:"Message", messageOpen:"Message window opened", invoiceFrom:"Invoice From :", invoiceTo:"Invoice To :", invoiceDate:"Invoice Date :", dueDate:"Due Date :", serialNo:"Serial No.", description:"Description", quantity:"Quantity", baseCost:"Base Cost", totalCost:"Total Cost", total:"Total", send:"Send", invoiceSent:"Invoice sent successfully", invoicePrinted:"Printing invoice...", charts:"Charts", allCharts:"All Charts", barChart:"Bar Chart", pieChart:"Pie Chart", donutChart:"Donut Chart", addNewMember:"Add New Member", ceo:"CEO", cto:"CTO", lead:"Lead", strategist:"Strategist", digitalMarketer:"Digital Marketer", socialMedia:"Social Media", memberEdit:"Edit Member", memberAddOpen:"Add member window opened", addNewEvent:"+ Add New Event", youAreGoingTo:"You are going to", day:"Day", week:"Week", month:"Month" },
+    az: { search:"Axtar", pages:"Səhifələr", dashboard:"Panel", products:"Məhsullar", favorites:"Sevimlilər", inbox:"Gələnlər", orderLists:"Sifariş Siyahıları", productStock:"Məhsul Stoku", pricing:"Qiymətlər", calendar:"Təqvim", todo:"Ediləcəklər", contact:"Əlaqə", invoice:"Qaimə", uiElements:"UI Elementləri", team:"Komanda", table:"Cədvəl", settings:"Tənzimləmələr", logout:"Çıxış", totalUser:"Ümumi İstifadəçi", totalOrder:"Ümumi Sifariş", totalSales:"Ümumi Satış", totalPending:"Gözləyən", upYesterday:"Dünəndən artım", upWeek:"Keçən həftədən artım", downYesterday:"Dünəndən azalma", salesDetails:"Satış Detalları", dealsDetails:"Razılaşma Detalları", october:"Oktyabr", productName:"Məhsul Adı", location:"Ünvan", dateTime:"Tarix - Vaxt", piece:"Say", amount:"Məbləğ", status:"Status", getStarted:"Başla", editProduct:"Məhsulu Redaktə Et", delivered:"Çatdırılıb", pending:"Gözləyir", cancelled:"Ləğv edilib", processing:"Emalda", admin:"Admin", noFav:"Hələ sevimli yoxdur — Məhsullar səhifəsindən əlavə edin.", favAdd:"Sevimlilərə əlavə olundu", favRemove:"Sevimlilərdən silindi", compose:"+ Yarat", composeOpen:"Yazma pəncərəsi açıldı", myEmail:"Mənim E-mailim", label:"Etiket", createNewLabel:"Yeni Etiket Yarat", searchMail:"Mail axtar", noMail:"Mail tapılmadı", starred:"Ulduzlu", sent:"Göndərilən", draft:"Qaralama", spam:"Spam", important:"Vacib", bin:"Səbət", primary:"Əsas", social:"Sosial", work:"İş", friends:"Dostlar", mailFoot:"Göstərilir 1-12 / 1,253", filterBy:"Filtrə Görə", date:"Tarix", orderType:"Sifariş Növü", orderStatus:"Sifariş Statusu", resetFilter:"Filtri Sıfırla", multiDate:"*Bir neçə tarix seçə bilərsiniz", applyNow:"İndi Tətbiq Et", datesApplied:"Tarixlər tətbiq olundu", id:"ID", name:"Ad", address:"Ünvan", type:"Növ", image:"Şəkil", category:"Kateqoriya", price:"Qiymət", availableColor:"Mövcud Rəng", action:"Əməliyyat", searchProduct:"Məhsul adı axtar", stockRemoved:"Məhsul silindi", ordersFoot:"Göstərilir 1-09 / 78", completed:"Tamamlandı", rejected:"Rədd edildi", onHold:"Gözləmədə", inTransit:"Yolda", electric:"Elektrik", book:"Kitab", medicine:"Dərman", mobile:"Mobil", watch:"Saat", digital:"Rəqəmsal Məhsul", fashion:"Moda", electronic:"Elektronika", basic:"Basic", standard:"Standard", premium:"Premium", monthlyCharge:"Aylıq Ödəniş", freeSetup:"Pulsuz Qurulum", bandwidth:"Bandwidth Limiti 10 GB", userConn:"20 İstifadəçi Bağlantısı", analytics:"Analitika Hesabatı", publicApi:"Public API Girişi", plugins:"Plugin İnteqrasiyası", custom:"Fərdi Məzmun İdarəetməsi", startTrial:"30 Günlük Pulsuz Sınağa Başla", todoList:"Ediləcəklər Siyahısı", addNewTask:"Yeni Tapşırıq Əlavə Et", taskRemoved:"Tapşırıq silindi", taskCompleted:"Tapşırıq tamamlandı", taskUncompleted:"Tapşırıq natamam olaraq işarələndi", addNewContact:"Yeni Kontakt Əlavə Et", message:"Mesaj", messageOpen:"Mesaj pəncərəsi açıldı", invoiceFrom:"Qaimə Göndərən :", invoiceTo:"Qaimə Alan :", invoiceDate:"Qaimə Tarixi :", dueDate:"Son Tarix :", serialNo:"Seriya No.", description:"Təsvir", quantity:"Miqdar", baseCost:"Əsas Qiymət", totalCost:"Ümumi Qiymət", total:"Cəmi", send:"Göndər", invoiceSent:"Qaimə uğurla göndərildi", invoicePrinted:"Qaimə çap olunur...", charts:"Qrafiklər", allCharts:"Bütün Qrafiklər", barChart:"Sütun Qrafiki", pieChart:"Dairə Qrafiki", donutChart:"Halqa Qrafiki", addNewMember:"Yeni Üzv Əlavə Et", ceo:"CEO", cto:"CTO", lead:"Lider", strategist:"Strateq", digitalMarketer:"Rəqəmsal Marketoloq", socialMedia:"Sosial Media", memberEdit:"Üzvü Redaktə Et", memberAddOpen:"Üzv əlavə etmə pəncərəsi açıldı", addNewEvent:"+ Yeni Tədbir", youAreGoingTo:"Getdiyiniz yerlər", day:"Gün", week:"Həftə", month:"Ay" },
+    tr: { search:"Ara", pages:"Sayfalar", dashboard:"Panel", products:"Ürünler", favorites:"Favoriler", inbox:"Gelen Kutusu", orderLists:"Sipariş Listeleri", productStock:"Ürün Stoku", pricing:"Fiyatlandırma", calendar:"Takvim", todo:"Yapılacaklar", contact:"İletişim", invoice:"Fatura", uiElements:"UI Öğeleri", team:"Ekip", table:"Tablo", settings:"Ayarlar", logout:"Çıkış", totalUser:"Toplam Kullanıcı", totalOrder:"Toplam Sipariş", totalSales:"Toplam Satış", totalPending:"Bekleyen", upYesterday:"Düne göre artış", upWeek:"Geçen haftaya göre artış", downYesterday:"Düne göre azalma", salesDetails:"Satış Detayları", dealsDetails:"Anlaşma Detayları", october:"Ekim", productName:"Ürün Adı", location:"Konum", dateTime:"Tarih - Saat", piece:"Adet", amount:"Tutar", status:"Durum", getStarted:"Başla", editProduct:"Ürünü Düzenle", delivered:"Teslim Edildi", pending:"Beklemede", cancelled:"İptal Edildi", processing:"İşlemde", admin:"Yönetici", noFav:"Henüz favori yok — Ürünler sayfasından ekleyin.", favAdd:"Favorilere eklendi", favRemove:"Favorilerden kaldırıldı", compose:"+ Oluştur", composeOpen:"Yazma penceresi açıldı", myEmail:"E-postam", label:"Etiket", createNewLabel:"Yeni Etiket Oluştur", searchMail:"Posta ara", noMail:"Posta bulunamadı", starred:"Yıldızlı", sent:"Gönderilen", draft:"Taslak", spam:"Spam", important:"Önemli", bin:"Çöp", primary:"Birincil", social:"Sosyal", work:"İş", friends:"Arkadaşlar", mailFoot:"1-12 / 1.253 gösteriliyor", filterBy:"Filtrele", date:"Tarih", orderType:"Sipariş Türü", orderStatus:"Sipariş Durumu", resetFilter:"Filtreyi Sıfırla", multiDate:"*Birden fazla tarih seçebilirsiniz", applyNow:"Şimdi Uygula", datesApplied:"Tarihler uygulandı", id:"ID", name:"Ad", address:"Adres", type:"Tür", image:"Görsel", category:"Kategori", price:"Fiyat", availableColor:"Mevcut Renk", action:"İşlem", searchProduct:"Ürün adı ara", stockRemoved:"Ürün silindi", ordersFoot:"1-09 / 78 gösteriliyor", completed:"Tamamlandı", rejected:"Reddedildi", onHold:"Beklemede", inTransit:"Yolda", electric:"Elektrik", book:"Kitap", medicine:"İlaç", mobile:"Mobil", watch:"Saat", digital:"Dijital Ürün", fashion:"Moda", electronic:"Elektronik", basic:"Basic", standard:"Standard", premium:"Premium", monthlyCharge:"Aylık Ücret", freeSetup:"Ücretsiz Kurulum", bandwidth:"Bant Genişliği Limiti 10 GB", userConn:"20 Kullanıcı Bağlantısı", analytics:"Analitik Raporu", publicApi:"Public API Erişimi", plugins:"Eklenti Entegrasyonu", custom:"Özel İçerik Yönetimi", startTrial:"30 Günlük Ücretsiz Denemeye Başla", todoList:"Yapılacaklar Listesi", addNewTask:"Yeni Görev Ekle", taskRemoved:"Görev silindi", taskCompleted:"Görev tamamlandı", taskUncompleted:"Görev tamamlanmadı olarak işaretlendi", addNewContact:"Yeni Kişi Ekle", message:"Mesaj", messageOpen:"Mesaj penceresi açıldı", invoiceFrom:"Fatura Gönderen :", invoiceTo:"Fatura Alan :", invoiceDate:"Fatura Tarihi :", dueDate:"Son Tarih :", serialNo:"Seri No.", description:"Açıklama", quantity:"Adet", baseCost:"Birim Fiyat", totalCost:"Toplam Tutar", total:"Toplam", send:"Gönder", invoiceSent:"Fatura başarıyla gönderildi", invoicePrinted:"Fatura yazdırılıyor...", charts:"Grafikler", allCharts:"Tüm Grafikler", barChart:"Çubuk Grafik", pieChart:"Pasta Grafik", donutChart:"Halka Grafik", addNewMember:"Yeni Üye Ekle", ceo:"CEO", cto:"CTO", lead:"Lider", strategist:"Stratejist", digitalMarketer:"Dijital Pazarlamacı", socialMedia:"Sosyal Medya", memberEdit:"Üyeyi Düzenle", memberAddOpen:"Üye ekleme penceresi açıldı", addNewEvent:"+ Yeni Etkinlik", youAreGoingTo:"Gideceğiniz yerler", day:"Gün", week:"Hafta", month:"Ay" },
+  };
+  const LANGS = [ { code:"en", flag:" 🇺🇸", name:"English" }, { code:"az", flag:"🇦🇿 ", name:"Azərbaycan" }, { code:"tr", flag:"🇹🇷", name:"Türkçe" } ];
+  let lang = localStorage.getItem("dash-lang") || "en";
+  const t = (k) => (I18N[lang] && I18N[lang][k]) || I18N.en[k] || k;
+
+  let toastTimer;
+  function toast(msg) { const el = document.getElementById("toast"); el.textContent = msg; el.classList.add("show"); clearTimeout(toastTimer); toastTimer = setTimeout(() => el.classList.remove("show"), 1800); }
+
+  const NAV = { main:["dashboard","products","favorites","inbox","orderLists","productStock"], pages:["pricing","calendar","todo","contact","invoice","uiElements","team","table"], foot:["settings","logout"] };
+  let activeKey = "dashboard";
+  const PAGES = { dashboard:"page-dashboard", products:"page-products", favorites:"page-favorites", inbox:"page-inbox", orderLists:"page-orderLists", productStock:"page-productStock", pricing:"page-pricing", calendar:"page-calendar", todo:"page-todo", contact:"page-contact", invoice:"page-invoice", uiElements:"page-uiElements", team:"page-team" };
+  function renderNav() {
+    const btn = (k) => `<button class="nav-item${k === activeKey ? " active" : ""}" data-key="${k}">${t(k)}</button>`;
+    document.getElementById("nav-main").innerHTML = NAV.main.map(btn).join("");
+    document.getElementById("nav-pages").innerHTML = NAV.pages.map(btn).join("");
+    document.getElementById("nav-foot").innerHTML = NAV.foot.map(btn).join("");
+  }
+  function showPage(key) { const target = PAGES[key] || "page-dashboard"; document.querySelectorAll(".page-section").forEach(s => (s.hidden = s.id !== target)); }
+  document.addEventListener("click", (e) => { const b = e.target.closest(".nav-item"); if (!b) return; activeKey = b.dataset.key; renderNav(); showPage(activeKey); });
+
+  const langBtn = document.getElementById("langBtn"), langMenu = document.getElementById("langMenu");
+  function renderLangMenu() { langMenu.innerHTML = LANGS.map(l => `<button class="lang-option${l.code === lang ? " active" : ""}" data-lang="${l.code}">${l.flag} ${l.name}</button>`).join(""); }
+  langBtn.addEventListener("click", (e) => { e.stopPropagation(); langMenu.hidden = !langMenu.hidden; });
+  langMenu.addEventListener("click", (e) => { const b = e.target.closest(".lang-option"); if (!b) return; e.stopPropagation(); lang = b.dataset.lang; localStorage.setItem("dash-lang", lang); langMenu.hidden = true; applyLang(); });
+  document.addEventListener("click", () => { langMenu.hidden = true; });
+
+  function applyLang() {
+    document.querySelectorAll("[data-i18n]").forEach(el => (el.textContent = t(el.dataset.i18n)));
+    document.querySelectorAll("[data-i18n-ph]").forEach(el => (el.placeholder = t(el.dataset.i18nPh)));
+    const cur = LANGS.find(l => l.code === lang);
+    document.getElementById("langFlag").textContent = cur.flag;
+    document.getElementById("langName").textContent = cur.name;
+    document.documentElement.lang = lang;
+    renderNav(); renderLangMenu(); renderStats(); renderDeals(); renderProducts(); renderFavorites(); renderFolders(); renderMails(); renderOrders(); renderDds(); renderCal(); renderStock(); renderTodos(); renderContacts(); renderInvoice(); renderBars(); renderChartsMenu(); renderTeam(); renderEvents(); renderCalendar();
+  }
+
+  const STATS = [
+    { title:"totalUser", value:"40,689", delta:"8.5%", dir:"up", note:"upYesterday", icon:"users", tint:"purple" },
+    { title:"totalOrder", value:"10293", delta:"1.3%", dir:"up", note:"upWeek", icon:"box", tint:"amber" },
+    { title:"totalSales", value:"$89,000", delta:"4.3%", dir:"down", note:"downYesterday", icon:"chart", tint:"green" },
+    { title:"totalPending", value:"2040", delta:"1.8%", dir:"up", note:"upYesterday", icon:"history", tint:"orange" },
+  ];
+  function renderStats() {
+    document.getElementById("stats").innerHTML = STATS.map(s => `
+      <article class="stat-card"><div class="stat-top"><div><div class="stat-title">${t(s.title)}</div><div class="stat-value">${s.value}</div></div>
+      <span class="stat-icon ${s.tint}"><svg class="ico" width="20" height="20"><use href="#i-${s.icon}"/></svg></span></div>
+      <div class="stat-trend"><svg class="ico ${s.dir}" width="14" height="14"><use href="#i-${s.dir}"/></svg><span class="${s.dir}">${s.delta}</span><span class="muted">${t(s.note)}</span></div></article>`).join("");
+  }
+  const DEALS = [
+    { emoji:"⌚", name:"Apple Watch", location:"6096 Marjolaine Landing", date:"12.09.2026 - 12.53 PM", piece:423, amount:"$34,295", status:"delivered" },
+    { emoji:"🎧", name:"AirPods Pro", location:"1428 Rooney Bridge", date:"12.09.2026 - 01.24 PM", piece:312, amount:"$12,840", status:"pending" },
+    { emoji:"", name:"MacBook Pro", location:"8929 Kreiger Station", date:"11.09.2026 - 06.47 PM", piece:158, amount:"$20,806", status:"delivered" },
+    { emoji:"📱", name:"iPhone 15", location:"3371 Willms Turnpike", date:"11.09.2026 - 09.12 AM", piece:508, amount:"$41,912", status:"cancelled" },
+  ];
+  function renderDeals() {
+    document.getElementById("deals").innerHTML = DEALS.map(d => `<tr><td><span class="product-cell"><span class="product-img">${d.emoji}</span>${d.name}</span></td><td>${d.location}</td><td>${d.date}</td><td>${d.piece}</td><td>${d.amount}</td><td><span class="status status-${d.status}">${t(d.status)}</span></td></tr>`).join("");
+  }
+  const DATA = [20,24,25,29,30,48,40,39,51,31,37,40,52,42,88,34,45,52,48,46,42,54,46,50,57,62,24,32,31,27,48,49,44,43,72,58,65,60,55,54,58,42,55,50,56,50,56];
+  (function () {
+    const W=1060,H=300,L=56,R=16,T=24,B=40, iw=W-L-R, ih=H-T-B;
+    const x=i=>L+i*iw/(DATA.length-1), y=v=>T+(1-v/100)*ih;
+    const pts=DATA.map((v,i)=>[x(i),y(v)]);
+    const line=pts.map(p=>p[0].toFixed(1)+","+p[1].toFixed(1)).join(" ");
+    const area=`${L},${y(0)} ${line} ${x(DATA.length-1)},${y(0)}`;
+    const si=DATA.indexOf(Math.max(...DATA)), sx=x(si), sy=y(DATA[si]);
+    document.getElementById("chart").innerHTML = `
+      <defs><linearGradient id="ag" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#4d7dfe" stop-opacity=".28"/><stop offset="100%" stop-color="#4d7dfe" stop-opacity=".02"/></linearGradient></defs>
+      ${[20,40,60,80,100].map(g=>`<line x1="${L}" x2="${W-R}" y1="${y(g)}" y2="${y(g)}" stroke="#eceff4"/><text x="${L-12}" y="${y(g)+4}" text-anchor="end" class="axis">${g}%</text>`).join("")}
+      <polygon points="${area}" fill="url(#ag)"/><polyline points="${line}" fill="none" stroke="#4d7dfe" stroke-width="2"/>
+      ${pts.map(p=>`<circle cx="${p[0]}" cy="${p[1]}" r="3" fill="#4d7dfe" stroke="#fff" stroke-width="1.2"/>`).join("")}
+      ${["5k","10k","15k","20k","25k","30k","35k","40k","45k","50k","55k","60k"].map((tk,i)=>`<text x="${L+i*iw/11}" y="${H-12}" text-anchor="middle" class="axis">${tk}</text>`).join("")}
+      <rect x="${sx-42}" y="${sy-38}" width="84" height="22" rx="5" fill="#4d7dfe"/><text x="${sx}" y="${sy-23}" text-anchor="middle" class="tooltip">64,3664,77</text>`;
+  })();
+
+  const SLIDES = [
+    { date:"September 12-22", t1:"Enjoy free home", t2:"delivery in this summer", p:"Designer Dresses - Pick from trendy Designer Dress.", bg:"#4d7dfe" },
+    { date:"October 1-10", t1:"New season,", t2:"new collections", p:"Fresh styles - Pick from the newest arrivals.", bg:"#7a5af8" },
+  ];
+  let slide = 0;
+  function renderBanner() { const s = SLIDES[slide]; document.getElementById("banner").style.background = s.bg; document.getElementById("b-date").textContent = s.date; document.getElementById("b-title").innerHTML = s.t1 + "<br>" + s.t2; document.getElementById("b-text").textContent = s.p; }
+  document.getElementById("b-prev").onclick = () => { slide = (slide - 1 + SLIDES.length) % SLIDES.length; renderBanner(); };
+  document.getElementById("b-next").onclick = () => { slide = (slide + 1) % SLIDES.length; renderBanner(); };
+
+  const CATALOG = [
+    { name:"Apple Watch Series 4", price:"$120.00", stars:4, count:131, fav:true,  imgs:["","",""] },
+    { name:"Air-Max-270",          price:"$60.00",  stars:4, count:64,  fav:true,  imgs:["👟","",""] },
+    { name:"Minimal Chair Tool",   price:"$24.59",  stars:4, count:63,  fav:true,  imgs:["🪑","",""] },
+    { name:"Amazfit Vip",          price:"$96.00",  stars:4, count:67,  fav:true,  imgs:["⌚","",""] },
+    { name:"Gumbo Mouse",          price:"$45.00",  stars:4, count:87,  fav:true,  imgs:["🖱️","",""] },
+    { name:"Camera Tripod",        price:"$58.99",  stars:4, count:67,  fav:true,  imgs:["📷","",""] },
+    { name:"MacBook Pro 14",       price:"$1,999",  stars:5, count:231, fav:false, imgs:["💻","️",""] },
+    { name:"AirPods Pro 2",        price:"$249.00", stars:5, count:231, fav:false, imgs:["🎧","",""] },
+  ];
+  const imgIdx = CATALOG.map(() => 0);
+  const stars = (n) => [1,2,3,4,5].map(i => `<span class="${i <= n ? "" : "off"}">★</span>`).join("");
+  const track = document.getElementById("productTrack"), favGrid = document.getElementById("favGrid");
+  function renderProducts() {
+    const sl = track.scrollLeft;
+    track.innerHTML = CATALOG.map((p, i) => `
+      <article class="product-card"><div class="product-imgbox"><span id="p-emo-${i}">${p.imgs[imgIdx[i]]}</span></div>
+      <div class="product-info"><div><div class="product-name">${p.name}</div><div class="product-price">${p.price}</div><div class="product-rate">${stars(p.stars)}<small>(${p.count})</small></div></div>
+      <button class="fav-btn${p.fav ? " active" : ""}" data-act="fav" data-i="${i}"><svg class="ico" width="14" height="14"><use href="#i-heart"/></svg></button></div>
+      <button class="edit-btn">${t("editProduct")}</button></article>`).join("");
+    track.scrollLeft = sl;
+  }
+  function renderFavorites() {
+    const list = CATALOG.map((p, i) => ({ p, i })).filter(o => o.p.fav);
+    favGrid.innerHTML = list.length ? list.map(({ p, i }) => `
+      <article class="fav-card"><div class="fav-imgbox">
+        <button class="card-arrow left" data-act="prev" data-i="${i}"><svg class="ico" width="13" height="13"><use href="#i-left"/></svg></button>
+        <span id="f-emo-${i}">${p.imgs[imgIdx[i]]}</span>
+        <button class="card-arrow right" data-act="next" data-i="${i}"><svg class="ico" width="13" height="13"><use href="#i-right"/></svg></button></div>
+      <div class="product-info"><div><div class="product-name">${p.name}</div><div class="product-price">${p.price}</div><div class="product-rate">${stars(p.stars)}<small>(${p.count})</small></div></div>
+      <button class="fav-btn active" data-act="fav" data-i="${i}"><svg class="ico" width="14" height="14"><use href="#i-heart"/></svg></button></div>
+      <button class="edit-btn">${t("editProduct")}</button></article>`).join("")
+      : `<div class="empty-fav">❤️ ${t("noFav")}</div>`;
+  }
+  function onCardClick(e) {
+    const btn = e.target.closest("[data-act]"); if (!btn) return;
+    const i = +btn.dataset.i, act = btn.dataset.act;
+    if (act === "fav") { CATALOG[i].fav = !CATALOG[i].fav; toast(CATALOG[i].fav ? t("favAdd") + " ❤️" : t("favRemove")); renderProducts(); renderFavorites(); }
+    else { const d = act === "prev" ? -1 : 1; imgIdx[i] = (imgIdx[i] + d + CATALOG[i].imgs.length) % CATALOG[i].imgs.length;
+      const emo = document.getElementById("f-emo-" + i) || document.getElementById("p-emo-" + i); if (emo) emo.textContent = CATALOG[i].imgs[imgIdx[i]]; }
+  }
+  track.addEventListener("click", onCardClick); favGrid.addEventListener("click", onCardClick);
+  document.getElementById("pc-prev").onclick = () => track.scrollBy({ left:-380, behavior:"smooth" });
+  document.getElementById("pc-next").onclick = () => track.scrollBy({ left:380, behavior:"smooth" });
+
+  const FOLDERS = [ { key:"inbox", icon:"i-mail", cnt:"1263" }, { key:"starred", icon:"i-star", cnt:"245" }, { key:"sent", icon:"i-send", cnt:"24,532" }, { key:"draft", icon:"i-edit", cnt:"09" }, { key:"spam", icon:"i-alert", cnt:"14" }, { key:"important", icon:"i-shield", cnt:"18" }, { key:"bin", icon:"i-trash", cnt:"9" } ];
+  const LABELS = [ { key:"primary", color:"#0dcea7", on:false }, { key:"social", color:"#4d7dfe", on:false }, { key:"work", color:"#f5a623", on:false }, { key:"friends", color:"#ec4899", on:false } ];
+  const MAILS = [
+    { from:"Juliu Jalal", tag:"primary", subj:"Our Bachelor of Commerce program is ACBSP-accredited.", time:"8:38 AM", star:true },
+    { from:"Minerva Barnett", tag:"work", subj:"Get Best Advertiser in Your Side Pocket", time:"8:13 AM", star:true },
+    { from:"Peter Lewis", tag:"friends", subj:"Vacation Home Rental Success", time:"7:52 PM", star:true },
+    { from:"Anthony Briggs", tag:null, subj:"Free Classifieds Using Them To Promote Your Stuff Online", time:"7:52 PM", star:true },
+    { from:"Clifford Morgan", tag:"social", subj:"Enhance Your Brand Potential With Giant Advertising Blimps", time:"4:13 PM", star:true },
+    { from:"Cecilia Webster", tag:"friends", subj:"Always Look On The Bright Side Of Life", time:"3:52 PM", star:true },
+    { from:"Harvey Manning", tag:null, subj:"Curling Irons Are As Individual As The Women Who Use Them", time:"2:30 PM", star:true },
+    { from:"Willie Blake", tag:"primary", subj:"Our Bachelor of Commerce program is ACBSP-accredited.", time:"8:38 AM", star:true },
+    { from:"Minerva Barnett", tag:"work", subj:"Get Best Advertiser in Your Side Pocket", time:"8:13 AM", star:true },
+    { from:"Fanny Weaver", tag:null, subj:"Free Classifieds Using Them To Promote Your Stuff Online", time:"7:52 PM", star:true },
+    { from:"Olga Hogan", tag:"social", subj:"Enhance Your Brand Potential With Giant Advertising Blimps", time:"4:13 PM", star:true },
+    { from:"Lora Houston", tag:"friends", subj:"Vacation Home Rental Success", time:"7:52 PM", star:true },
+  ];
+  MAILS.forEach(m => (m.checked = false));
+  let activeFolder = "inbox", mailQuery = "";
+  function renderFolders() {
+    document.getElementById("folderList").innerHTML = FOLDERS.map(f => `<button class="mail-item${f.key === activeFolder ? " active" : ""}" data-folder="${f.key}"><svg class="ico" width="14" height="14"><use href="#${f.icon}"/></svg><span>${t(f.key)}</span><span class="cnt">${f.cnt}</span></button>`).join("");
+    document.getElementById("labelList").innerHTML = LABELS.map((l, i) => `<button class="label-item" data-label="${i}"><span class="label-box" style="border-color:${l.color};${l.on ? "background:" + l.color : ""}"></span><span>${t(l.key)}</span></button>`).join("");
+  }
+  function renderMails() {
+    const q = mailQuery.trim().toLowerCase();
+    let list = MAILS;
+    if (activeFolder === "starred") list = list.filter(m => m.star);
+    else if (activeFolder !== "inbox") list = [];
+    list = list.filter(m => !q || m.from.toLowerCase().includes(q) || m.subj.toLowerCase().includes(q));
+    document.getElementById("mailList").innerHTML = list.length ? list.map((m, i) => `
+      <div class="mail-row"><button class="chk${m.checked ? " on" : ""}" data-chk="${MAILS.indexOf(m)}">${m.checked ? '<svg class="ico" width="10" height="10"><use href="#i-check"/></svg>' : ""}</button>
+      <button class="star-btn${m.star ? " on" : ""}" data-star="${MAILS.indexOf(m)}"><svg class="ico" width="15" height="15"><use href="#i-star"/></svg></button>
+      <span class="mail-from">${m.from}</span>${m.tag ? `<span class="mail-tag tag-${m.tag}">${t(m.tag)}</span>` : ""}<span class="mail-subj">${m.subj}</span><span class="mail-time">${m.time}</span></div>`).join("")
+      : `<div style="padding:16px"><div class="empty-fav">🔍 ${t("noMail")}</div></div>`;
+  }
+  document.getElementById("mailSide").addEventListener("click", (e) => {
+    const f = e.target.closest("[data-folder]"); if (f) { activeFolder = f.dataset.folder; renderFolders(); renderMails(); return; }
+    const l = e.target.closest("[data-label]"); if (l) { const o = LABELS[+l.dataset.label]; o.on = !o.on; renderFolders(); }
+  });
+  document.getElementById("mailList").addEventListener("click", (e) => {
+    const c = e.target.closest("[data-chk]"); if (c) { MAILS[+c.dataset.chk].checked = !MAILS[+c.dataset.chk].checked; renderMails(); return; }
+    const s = e.target.closest("[data-star]"); if (s) { MAILS[+s.dataset.star].star = !MAILS[+s.dataset.star].star; renderMails(); }
+  });
+  document.getElementById("mailSearch").oninput = (e) => { mailQuery = e.target.value; renderMails(); };
+  document.getElementById("composeBtn").onclick = () => toast(t("composeOpen"));
+
+  const ORDERS = [
+    { id:"00001", name:"Christine Brooks", address:"089 Kutch Green Apt. 448", date:"04 Sep 2026", type:"electric", status:"completed" },
+    { id:"00002", name:"Rosie Pearson", address:"979 Immanuel Ferry Suite 526", date:"28 May 2026", type:"book", status:"processing" },
+    { id:"00003", name:"Darnell Caldwell", address:"8587 Frida Ports", date:"23 Nov 2026", type:"medicine", status:"rejected" },
+    { id:"00004", name:"Gilbert Johnston", address:"768 Destiny Lake Suite 600", date:"05 Feb 2026", type:"mobile", status:"completed" },
+    { id:"00005", name:"Alan Cain", address:"042 Mylene Throughway", date:"29 Jul 2026", type:"watch", status:"processing" },
+    { id:"00006", name:"Alfred Murray", address:"543 Weimann Mountain", date:"15 Aug 2026", type:"medicine", status:"completed" },
+    { id:"00007", name:"Maggie Sullivan", address:"New Scottleberg", date:"21 Dec 2026", type:"watch", status:"processing" },
+    { id:"00008", name:"Rosie Todd", address:"New Jon", date:"30 Apr 2026", type:"medicine", status:"onHold" },
+    { id:"00009", name:"Dollie Hines", address:"124 Lyla Forge Suite 975", date:"09 Jan 2026", type:"book", status:"inTransit" },
+  ];
+  const TYPES = ["electric","book","medicine","mobile","watch"], STATUSES = ["completed","processing","rejected","onHold","inTransit"];
+  let fType = "", fStatus = "";
+  const cal = { m:1, y:2026 }; let selDays = [];
+  function renderOrders() {
+    document.getElementById("orderBody").innerHTML = ORDERS.filter(o => (!fType || o.type === fType) && (!fStatus || o.status === fStatus))
+      .map(o => `<tr><td>${o.id}</td><td>${o.name}</td><td>${o.address}</td><td>${o.date}</td><td>${t(o.type)}</td><td><span class="pill pill-${o.status}">${t(o.status)}</span></td></tr>`).join("");
+  }
+  function renderDds() {
+    const opt = (v, cur) => `<button class="dd-option${cur === v ? " active" : ""}" data-val="${v}">${t(v)}</button>`;
+    document.getElementById("ddType").innerHTML = TYPES.map(v => opt(v, fType)).join("");
+    document.getElementById("ddStatus").innerHTML = STATUSES.map(v => opt(v, fStatus)).join("");
+  }
+  function renderCal() {
+    const first = new Date(cal.y, cal.m, 1).getDay(), dim = new Date(cal.y, cal.m + 1, 0).getDate(), prevDim = new Date(cal.y, cal.m, 0).getDate();
+    let cells = "";
+    for (let i = first - 1; i >= 0; i--) cells += `<span class="cal-d off">${prevDim - i}</span>`;
+    for (let d = 1; d <= dim; d++) cells += `<span class="cal-d${selDays.includes(d) ? " on" : ""}" data-day="${d}">${d}</span>`;
+    const title = new Date(cal.y, cal.m, 1).toLocaleString(lang === "az" ? "az" : lang === "tr" ? "tr" : "en", { month:"long" }) + " " + cal.y;
+    document.getElementById("calPop").innerHTML = `
+      <div class="cal-head"><b>${title}</b><span class="cal-nav"><button data-cal="-1"><svg class="ico" width="12" height="12"><use href="#i-left"/></svg></button><button data-cal="1"><svg class="ico" width="12" height="12"><use href="#i-right"/></svg></button></span></div>
+      <div class="cal-grid">${["S","M","T","W","T","F","S"].map(w => `<span class="cal-w">${w}</span>`).join("")}${cells}</div>
+      <div class="cal-note">${t("multiDate")}</div><button class="apply-btn" data-apply="1">${t("applyNow")}</button>`;
+  }
+  document.getElementById("dateBtn").onclick = (e) => { e.stopPropagation(); const p = document.getElementById("calPop"); p.hidden = !p.hidden; document.getElementById("ddType").hidden = true; document.getElementById("ddStatus").hidden = true; };
+  document.getElementById("typeBtn").onclick = (e) => { e.stopPropagation(); const m = document.getElementById("ddType"); m.hidden = !m.hidden; document.getElementById("calPop").hidden = true; document.getElementById("ddStatus").hidden = true; };
+  document.getElementById("statusBtn").onclick = (e) => { e.stopPropagation(); const m = document.getElementById("ddStatus"); m.hidden = !m.hidden; document.getElementById("calPop").hidden = true; document.getElementById("ddType").hidden = true; };
+  document.getElementById("ddType").onclick = (e) => { const o = e.target.closest("[data-val]"); if (!o) return; fType = fType === o.dataset.val ? "" : o.dataset.val; document.getElementById("ddType").hidden = true; renderDds(); renderOrders(); };
+  document.getElementById("ddStatus").onclick = (e) => { const o = e.target.closest("[data-val]"); if (!o) return; fStatus = fStatus === o.dataset.val ? "" : o.dataset.val; document.getElementById("ddStatus").hidden = true; renderDds(); renderOrders(); };
+  document.getElementById("calPop").onclick = (e) => {
+    e.stopPropagation();
+    const nav = e.target.closest("[data-cal]"); if (nav) { cal.m += +nav.dataset.cal; if (cal.m < 0) { cal.m = 11; cal.y--; } if (cal.m > 11) { cal.m = 0; cal.y++; } selDays = []; renderCal(); return; }
+    const d = e.target.closest("[data-day]"); if (d) { const v = +d.dataset.day; const i = selDays.indexOf(v); i >= 0 ? selDays.splice(i, 1) : selDays.push(v); renderCal(); return; }
+    if (e.target.closest("[data-apply]")) { document.getElementById("calPop").hidden = true; toast(t("datesApplied") + (selDays.length ? " (" + selDays.length + ")" : "")); }
+  };
+  document.getElementById("resetBtn").onclick = () => { fType = ""; fStatus = ""; selDays = []; document.getElementById("calPop").hidden = true; renderDds(); renderOrders(); renderCal(); };
+  document.addEventListener("click", (e) => { if (!e.target.closest(".fgroup")) { document.getElementById("calPop").hidden = true; document.getElementById("ddType").hidden = true; document.getElementById("ddStatus").hidden = true; document.getElementById("chartsMenu").hidden = true; } });
+
+  const STOCK = [
+    { emoji:"⌚", name:"Apple Watch Series 4", category:"digital", price:"$690.00", piece:63, colors:["#17233b","#9aa3b5","#e58f8f"] },
+    { emoji:"🎧", name:"Microsoft Headsquare", category:"digital", price:"$190.00", piece:13, colors:["#17233b","#f0705f","#4d9be6","#e6c84d"] },
+    { emoji:"👗", name:"Women's Dress", category:"fashion", price:"$640.00", piece:635, colors:["#8f2d5c","#7ec3e6","#17233b","#2d4de6"] },
+    { emoji:"📱", name:"Samsung A50", category:"mobile", price:"$400.00", piece:67, colors:["#2d3e8f","#17233b","#a3164f"] },
+    { emoji:"📷", name:"Camera", category:"electronic", price:"$420.00", piece:52, colors:["#2d3e8f","#17233b","#a3164f"] },
+    { emoji:"🎧", name:"Microsoft Headsquare", category:"digital", price:"$190.00", piece:13, colors:["#17233b","#f0705f","#4d9be6","#e6c84d"] },
+    { emoji:"👗", name:"Women's Dress", category:"fashion", price:"$640.00", piece:635, colors:["#8f2d5c","#7ec3e6","#17233b","#2d4de6"] },
+  ];
+  let stockQuery = "";
+  function renderStock() {
+    const q = stockQuery.trim().toLowerCase();
+    document.getElementById("stockBody").innerHTML = STOCK.map((s, i) => ({ s, i })).filter(o => o.s.name.toLowerCase().includes(q)).map(({ s, i }) => `
+      <tr><td><span class="product-img stock-img">${s.emoji}</span></td><td>${s.name}</td><td>${t(s.category)}</td><td>${s.price}</td><td>${s.piece}</td>
+      <td><span class="color-dots">${s.colors.map(c => `<span class="color-dot" style="background:${c}"></span>`).join("")}</span></td>
+      <td><button class="act-btn" data-sedit="${i}"><svg class="ico" width="14" height="14"><use href="#i-edit"/></svg></button><button class="act-btn danger" data-sdel="${i}"><svg class="ico" width="14" height="14"><use href="#i-trash"/></svg></button></td></tr>`).join("");
+  }
+  document.getElementById("stockQuery").oninput = (e) => { stockQuery = e.target.value; renderStock(); };
+  document.getElementById("stockBody").addEventListener("click", (e) => {
+    const ed = e.target.closest("[data-sedit]"); if (ed) { toast(t("editProduct")); return; }
+    const del = e.target.closest("[data-sdel]"); if (del) { STOCK.splice(+del.dataset.sdel, 1); toast(t("stockRemoved")); renderStock(); }
+  });
+
+  // ===== TO-DO LIST =====
+  const TODOS = [
+    { text:"Meeting with CEO", completed:false, starred:false },
+    { text:"Pick up kids from school", completed:false, starred:true },
+    { text:"Shopping with Brother", completed:false, starred:false },
+    { text:"Review with HR", completed:true, starred:false },
+    { text:"Going to Dia's School", completed:false, starred:false },
+    { text:"Check design files", completed:false, starred:true },
+    { text:"Update File", completed:false, starred:false },
+  ];
+  function renderTodos() {
+    document.getElementById("todoContainer").innerHTML = TODOS.map((todo, i) => `
+      <div class="todo-item${todo.completed ? ' completed' : ''}">
+        <div class="todo-checkbox${todo.completed ? ' checked' : ''}" data-todo-check="${i}"></div>
+        <span class="todo-text">${todo.text}</span>
+        <div class="todo-actions">
+          <button class="todo-star${todo.starred ? ' active' : ''}" data-todo-star="${i}"><svg class="ico" width="18" height="18"><use href="#i-star"/></svg></button>
+          <button class="todo-delete" data-todo-delete="${i}"><svg class="ico" width="12" height="12"><use href="#i-trash"/></svg></button>
+        </div>
+      </div>
+    `).join("");
+  }
+  document.getElementById("todoContainer").addEventListener("click", (e) => {
+    const check = e.target.closest("[data-todo-check]");
+    if (check) {
+      const i = +check.dataset.todoCheck;
+      TODOS[i].completed = !TODOS[i].completed;
+      toast(TODOS[i].completed ? t("taskCompleted") : t("taskUncompleted"));
+      renderTodos();
+      return;
+    }
+    const star = e.target.closest("[data-todo-star]");
+    if (star) {
+      const i = +star.dataset.todoStar;
+      TODOS[i].starred = !TODOS[i].starred;
+      renderTodos();
+      return;
+    }
+    const del = e.target.closest("[data-todo-delete]");
+    if (del) {
+      const i = +del.dataset.todoDelete;
+      TODOS.splice(i, 1);
+      toast(t("taskRemoved"));
+      renderTodos();
+      return;
+    }
+  });
+
+  // ===== CONTACT =====
+  const CONTACTS = [
+    { name:"Jason Price",     email:"kuhiman.jenmey@yahoo.com",      img:"https://randomuser.me/api/portraits/men/32.jpg" },
+    { name:"Duane Dean",      email:"rusty.botsford@wilfrid.io",     img:"https://randomuser.me/api/portraits/men/45.jpg" },
+    { name:"Jonathan Barker", email:"cora_haley@quaim.biz",          img:"https://randomuser.me/api/portraits/men/22.jpg" },
+    { name:"Rosie Glover",    email:"lockman.marquae@hotmail.com",   img:"https://randomuser.me/api/portraits/men/85.jpg" },
+    { name:"Patrick Greer",   email:"pearlie.eichmann@trevion.net",  img:"https://randomuser.me/api/portraits/men/76.jpg" },
+    { name:"Darrell Ortega",  email:"chaya.litielda@terry.info",     img:"https://randomuser.me/api/portraits/men/54.jpg" },
+  ];
+  function renderContacts() {
+    document.getElementById("contactGrid").innerHTML = CONTACTS.map((c, i) => `
+      <article class="contact-card">
+        <img class="contact-img" src="${c.img}" alt="${c.name}" />
+        <div class="contact-name">${c.name}</div>
+        <div class="contact-email">${c.email}</div>
+        <button class="msg-btn" data-msg="${i}"><svg class="ico" width="13" height="13"><use href="#i-mail"/></svg><span>${t("message")}</span></button>
+      </article>`).join("");
+  }
+  document.getElementById("contactGrid").addEventListener("click", (e) => {
+    const m = e.target.closest("[data-msg]");
+    if (m) toast(t("messageOpen") + ": " + CONTACTS[+m.dataset.msg].name);
+  });
+
+  // ===== INVOICE =====
+  const INVOICE_ITEMS = [
+    { serial:1, desc:"Children Toy", qty:2, base:"$20",   total:"$80" },
+    { serial:2, desc:"Makeup",       qty:2, base:"$50",   total:"$100" },
+    { serial:3, desc:"Asus Laptop",  qty:5, base:"$100",  total:"$500" },
+    { serial:4, desc:"Iphone X",     qty:4, base:"$1000", total:"$4000" },
+  ];
+  function renderInvoice() {
+    document.getElementById("invoiceBody").innerHTML = INVOICE_ITEMS.map(it =>
+      `<tr><td>${it.serial}</td><td>${it.desc}</td><td>${it.qty}</td><td>${it.base}</td><td>${it.total}</td></tr>`).join("");
+    document.getElementById("invoiceTotal").textContent = "$4680";
+  }
+  document.getElementById("printBtn").onclick = () => toast(t("invoicePrinted"));
+  document.getElementById("sendBtn").onclick = () => toast(t("invoiceSent"));
+
+  // ===== UI ELEMENTS =====
+  const BAR_GROUPS = [
+    { type:"solid", color:"#4d7dfe", heights:[78,38,22,58,45,30,40] },
+    { type:"gradient", css:"linear-gradient(to top,#0dcea7,#dcf5ef)", heights:[62,30,48,26,52,36,58] },
+    { type:"alt", colors:["#4d7dfe","#f5a623"], heights:[30,52,40,60,45,78,35,55,42,65,50,58] },
+    { type:"gradient", css:"linear-gradient(to top,#ec4899,#fbdcef)", heights:[55,30,45,28,50,35,60] },
+  ];
+  function renderBars() {
+    document.getElementById("barChartRow").innerHTML = BAR_GROUPS.map(g => `
+      <div class="bar-group">${g.heights.map((h, i) => {
+        const bg = g.type === "alt" ? g.colors[i % 2] : g.type === "gradient" ? g.css : g.color;
+        return `<span class="bar" style="height:${h}px;background:${bg}"></span>`;
+      }).join("")}</div>`).join("");
+  }
+  const CHART_VIEWS = [ { key:"all", label:"allCharts" }, { key:"bar", label:"barChart" }, { key:"pie", label:"pieChart" }, { key:"donut", label:"donutChart" } ];
+  let chartView = "all";
+  function renderChartsMenu() {
+    document.getElementById("chartsMenu").innerHTML = CHART_VIEWS.map(v => `<button class="dd-option${chartView === v.key ? " active" : ""}" data-view="${v.key}">${t(v.label)}</button>`).join("");
+  }
+  function applyChartView() {
+    document.getElementById("card-bar").hidden = chartView !== "all" && chartView !== "bar";
+    document.getElementById("card-pie").hidden = chartView !== "all" && chartView !== "pie";
+    document.getElementById("card-donut").hidden = chartView !== "all" && chartView !== "donut";
+  }
+  document.getElementById("chartsBtn").onclick = (e) => { e.stopPropagation(); const m = document.getElementById("chartsMenu"); m.hidden = !m.hidden; };
+  document.getElementById("chartsMenu").onclick = (e) => {
+    const o = e.target.closest("[data-view]"); if (!o) return;
+    chartView = o.dataset.view;
+    document.getElementById("chartsMenu").hidden = true;
+    renderChartsMenu(); applyChartView();
+  };
+
+  // ===== TEAM =====
+  const TEAM = [
+    { name:"Jason Price",    role:"admin",            email:"janick_parisian@yahoo.com",    img:"https://randomuser.me/api/portraits/men/26.jpg" },
+    { name:"Jukkoe Sisao",   role:"ceo",              email:"sibyl_kozey@gmail.com",        img:"https://randomuser.me/api/portraits/men/41.jpg" },
+    { name:"Harriet King",   role:"cto",              email:"nadia_block@hotmail.com",      img:"https://randomuser.me/api/portraits/men/64.jpg" },
+    { name:"Lenora Benson",  role:"lead",             email:"fel.wallace@kunde.us",         img:"https://randomuser.me/api/portraits/men/75.jpg" },
+    { name:"Olivia Reese",   role:"strategist",       email:"kemmer.hattie@cremin.us",      img:"https://randomuser.me/api/portraits/men/22.jpg" },
+    { name:"Bertha Valdez",  role:"ceo",              email:"loraine.koelpin@tromp.io",     img:"https://randomuser.me/api/portraits/men/54.jpg" },
+    { name:"Harriett Payne", role:"digitalMarketer",  email:"nannie_west@estrella.tv",      img:"https://randomuser.me/api/portraits/men/32.jpg" },
+    { name:"George Bryant",  role:"socialMedia",      email:"delmer.kling@gmail.com",       img:"https://randomuser.me/api/portraits/women/44.jpg" },
+    { name:"Lily French",    role:"strategist",       email:"lucienne.herman@hotmail.com",  img:"https://randomuser.me/api/portraits/women/68.jpg" },
+    { name:"Howard Adkins",  role:"ceo",              email:"wiegand.leonor@herman.us",     img:"https://randomuser.me/api/portraits/men/60.jpg" },
+    { name:"Earl Bowman",    role:"digitalMarketer",  email:"waino_allenwerth@nicolette.tv",img:"https://randomuser.me/api/portraits/men/76.jpg" },
+    { name:"Patrick Padilla",role:"socialMedia",      email:"octavia.nienow@gleichner.net", img:"https://randomuser.me/api/portraits/men/91.jpg" },
+  ];
+  function renderTeam() {
+    document.getElementById("teamGrid").innerHTML = TEAM.map((m, i) => `
+      <article class="team-card">
+        <img class="team-avatar" src="${m.img}" alt="${m.name}" />
+        <button class="team-edit" data-tedit="${i}" title="${t("memberEdit")}"><svg class="ico" width="12" height="12"><use href="#i-edit"/></svg></button>
+        <div class="team-name">${m.name}</div>
+        <div class="team-role">${t(m.role)}</div>
+        <div class="team-email">${m.email}</div>
+      </article>`).join("");
+  }
+  document.getElementById("teamGrid").addEventListener("click", (e) => {
+    const ed = e.target.closest("[data-tedit]");
+    if (ed) toast(t("memberEdit") + ": " + TEAM[+ed.dataset.tedit].name);
+  });
+  document.getElementById("addMemberBtn").onclick = () => toast(t("memberAddOpen"));
+
+  // ===== CALENDAR =====
+  const CALENDAR_EVENTS = [
+    { id:1, title:"Design Conference", org:"Zillul Design Agency", time:"Today 07:19 AM", location:"56 Davion Mission Suite 157\nMeaghanberg", day:6, color:"purple", attendees:3, img:"👥" },
+    { id:2, title:"Weekend Festival", org:"", time:"16 October 2026 at 5:00 PM", location:"853 Moore Flats Suite 158\nSweden", day:16, color:"pink", attendees:2, img:"🎉" },
+    { id:3, title:"Glastonbury Festival", org:"", time:"20-22 October 2026 at 8:00 PM", location:"646 Walter Road Apt. 571\nTurks and Caicos Islands", days:[20,21,22], color:"orange", attendees:4, img:"" },
+    { id:4, title:"Ultra Europe 2026", org:"", time:"25 October 2026 at 10:00 PM", location:"506 Satterfield Tunnel Apt. 963\nSan Marino", day:25, color:"blue", attendees:3, img:"" },
+  ];
+  let calDate = new Date(2026, 9, 1); // October 2026
+  let currentView = "month";
+
+  function renderEvents() {
+    document.getElementById("eventList").innerHTML = CALENDAR_EVENTS.map(e => `
+      <div class="event-item">
+        <div class="event-avatar">${e.img}</div>
+        <div class="event-info">
+          <div class="event-title">${e.title}</div>
+          <div class="event-time">${e.time}</div>
+          <div class="event-location">${e.location.replace("\n", ", ")}</div>
+          <div class="event-attendees">
+            ${[1,2,3].map(i => `<div class="event-attendee">${String.fromCharCode(64+i)}</div>`).join("")}
+            ${e.attendees > 3 ? `<div class="event-attendee more">+${e.attendees-3}</div>` : ""}
+          </div>
+        </div>
+      </div>
+    `).join("");
+  }
+
+  function renderCalendar() {
+    const year = calDate.getFullYear();
+    const month = calDate.getMonth();
+    const firstDay = new Date(year, month, 1).getDay();
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+    const daysInPrevMonth = new Date(year, month, 0).getDate();
+    
+    const monthNames = lang === "az" ? ["Yanvar","Fevral","Mart","Aprel","May","İyun","İyul","Avqust","Sentyabr","Oktyabr","Noyabr","Dekabr"] :
+                       lang === "tr" ? ["Ocak","Şubat","Mart","Nisan","Mayıs","Haziran","Temmuz","Ağustos","Eylül","Ekim","Kasım","Aralık"] :
+                       ["January","February","March","April","May","June","July","August","September","October","November","December"];
+    
+    document.getElementById("calTitle").textContent = `${monthNames[month]} ${year}`;
+    
+    let html = "";
+    const weekDays = lang === "az" ? ["B","D","S","Ç","A","C","Ş"] :
+                     lang === "tr" ? ["P","P","S","Ç","P","C","C"] :
+                     ["MON","TUE","WED","THU","FRI","SAT","SUN"];
+    
+    weekDays.forEach(d => {
+      html += `<div class="calendar-day-header">${d}</div>`;
+    });
+    
+    // Previous month days
+    for (let i = firstDay - 1; i >= 0; i--) {
+      const dayNum = daysInPrevMonth - i;
+      html += `<div class="calendar-day other-month"><div class="calendar-day-number">${dayNum}</div></div>`;
+    }
+    
+    // Current month days
+    for (let day = 1; day <= daysInMonth; day++) {
+      let eventsHtml = "";
+      CALENDAR_EVENTS.forEach(e => {
+        if (e.day === day || (e.days && e.days.includes(day))) {
+          eventsHtml += `<div class="event-bar ${e.color}" data-event="${e.id}">${e.title}</div>`;
+        }
+      });
+      html += `<div class="calendar-day"><div class="calendar-day-number">${day}</div>${eventsHtml}</div>`;
+    }
+    
+    // Next month days
+    const totalCells = Math.ceil((firstDay + daysInMonth) / 7) * 7;
+    const remainingDays = totalCells - (firstDay + daysInMonth);
+    for (let i = 1; i <= remainingDays; i++) {
+      html += `<div class="calendar-day other-month"><div class="calendar-day-number">${i}</div></div>`;
+    }
+    
+    document.getElementById("calendarGrid").innerHTML = html;
+    
+    // Add click handlers
+    document.querySelectorAll(".event-bar").forEach(bar => {
+      bar.addEventListener("click", (e) => {
+        const eventId = +e.target.dataset.event;
+        showEventPopup(eventId, e.target);
+      });
+    });
+  }
+
+  function showEventPopup(eventId, element) {
+    const event = CALENDAR_EVENTS.find(e => e.id === eventId);
+    if (!event) return;
+    
+    const popup = document.getElementById("eventPopup");
+    const rect = element.getBoundingClientRect();
+    const calendarRect = document.querySelector(".calendar-main").getBoundingClientRect();
+    
+    popup.style.left = (rect.left - calendarRect.left) + "px";
+    popup.style.top = (rect.bottom - calendarRect.top + 10) + "px";
+    
+    document.getElementById("popupImg").textContent = event.img;
+    document.getElementById("popupTitle").textContent = event.title;
+    document.getElementById("popupOrg").textContent = event.org || "";
+    document.getElementById("popupTime").textContent = event.time;
+    document.getElementById("popupLocation").textContent = event.location.replace("\n", ", ");
+    
+    let attendeesHtml = "";
+    for (let i = 0; i < Math.min(3, event.attendees); i++) {
+      attendeesHtml += `<div class="event-popup-attendee">${String.fromCharCode(65+i)}</div>`;
+    }
+    if (event.attendees > 3) {
+      attendeesHtml += `<div class="event-popup-attendee more">+${event.attendees-3}</div>`;
+    }
+    document.getElementById("popupAttendees").innerHTML = attendeesHtml;
+    
+    popup.hidden = false;
+  }
+
+  document.getElementById("calPrev").onclick = () => {
+    calDate.setMonth(calDate.getMonth() - 1);
+    renderCalendar();
+  };
+  
+  document.getElementById("calNext").onclick = () => {
+    calDate.setMonth(calDate.getMonth() + 1);
+    renderCalendar();
+  };
+  
+  document.querySelectorAll(".calendar-view").forEach(btn => {
+    btn.addEventListener("click", () => {
+      document.querySelectorAll(".calendar-view").forEach(b => b.classList.remove("active"));
+      btn.classList.add("active");
+      currentView = btn.dataset.view;
+    });
+  });
+  
+  document.addEventListener("click", (e) => {
+    if (!e.target.closest(".event-bar") && !e.target.closest(".event-popup")) {
+      document.getElementById("eventPopup").hidden = true;
+    }
+  });
+
+  renderBanner();
+  applyLang();
+</script>
+</body>
+</html>                   
